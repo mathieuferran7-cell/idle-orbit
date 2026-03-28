@@ -1,0 +1,21 @@
+# Godot cache
+.godot/
+*.import
+
+# Builds
+export/
+*.apk
+*.aab
+*.idsig
+
+# Android
+android/build/
+keystore/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Simulation outputs
+simulation/*.csv
+simulation/*.translation
