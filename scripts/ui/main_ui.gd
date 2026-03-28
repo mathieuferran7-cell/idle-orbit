@@ -197,7 +197,7 @@ func _refresh_module_row(module_id: String) -> void:
 	var hbox: HBoxContainer = row.get_child(0).get_child(0)
 	var info_vbox: VBoxContainer = hbox.get_child(0)
 	var stats_label: Label = info_vbox.get_node("StatsLabel")
-	stats_label.text = "x%d  |  +%s%s/s" % [count, res_icon, NumberFormatter.format(prod)]
+	stats_label.text = "x%d  |  +%s%s/s" % [count, res_icon, NumberFormatter.format(prod * count)]
 
 	var buy_btn: Button = hbox.get_node("BuyButton")
 	var amount := _get_buy_amount()
