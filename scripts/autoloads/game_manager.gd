@@ -3,6 +3,7 @@ extends Node
 var balance: Dictionary = {}
 var modules_data: Dictionary = {}
 var research: ResearchManager
+var prestige: PrestigeManager
 
 var energy: float = 0.0
 var tech: float = 0.0
@@ -38,6 +39,9 @@ func _load_data_files() -> void:
 	research = ResearchManager.new()
 	research.setup(_read_json("res://data/research.json"))
 	add_child(research)
+	prestige = PrestigeManager.new()
+	prestige.setup(_read_json("res://data/prestige.json"))
+	add_child(prestige)
 
 func _read_json(path: String) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
@@ -72,13 +76,16 @@ func get_total_production(resource_type: String) -> float:
 		if mod.get("resource", "") == resource_type:
 			total += mod.get("base_production", 0.0) * module_counts.get(module_id, 0)
 	if resource_type == "energy":
-		total *= research.get_energy_multiplier()
+		total *= research.get_energy_multiplier() * prestige.get_energy_mult()
+	total *= prestige.get_global_speed()
 	return total
 
 func add_resource(type: String, amount: float) -> void:
 	match type:
 		"energy":
 			energy += amount
+			if amount > 0.0:
+				prestige.track_energy(amount)
 			EventBus.resource_changed.emit("energy", amount, energy)
 		"tech":
 			tech += amount
@@ -89,7 +96,7 @@ func get_module_cost(module_id: String) -> float:
 	var base_cost: float = mod.get("base_cost", 0.0)
 	var growth: float = mod.get("cost_growth", balance.get("module_cost_growth_default", 1.15))
 	var count: int = module_counts.get(module_id, 0)
-	return base_cost * pow(growth, count) * research.get_cost_multiplier()
+	return base_cost * pow(growth, count) * research.get_cost_multiplier() * prestige.get_module_discount()
 
 func can_afford_module(module_id: String) -> bool:
 	return energy >= get_module_cost(module_id)
@@ -124,7 +131,7 @@ func get_bulk_cost(module_id: String, amount: int) -> float:
 	var mod: Dictionary = modules_data[module_id]
 	var base: float = mod.get("base_cost", 0.0)
 	var growth: float = mod.get("cost_growth", balance.get("module_cost_growth_default", 1.15))
-	var cm := research.get_cost_multiplier()
+	var cm := research.get_cost_multiplier() * prestige.get_module_discount()
 	for i in range(amount):
 		total += base * pow(growth, count + i) * cm
 	return total
@@ -136,7 +143,7 @@ func get_max_affordable(module_id: String) -> int:
 	var mod: Dictionary = modules_data[module_id]
 	var base: float = mod.get("base_cost", 0.0)
 	var growth: float = mod.get("cost_growth", balance.get("module_cost_growth_default", 1.15))
-	var cm := research.get_cost_multiplier()
+	var cm := research.get_cost_multiplier() * prestige.get_module_discount()
 	while true:
 		var next_cost := base * pow(growth, current + count) * cm
 		if total + next_cost > energy:
@@ -165,11 +172,11 @@ func _check_unlocks() -> void:
 			EventBus.module_unlocked.emit(module_id)
 
 func _calculate_offline_gains(seconds: float) -> Dictionary:
-	var max_offline: float = balance.get("offline_max_seconds", 7200)
-	max_offline *= research.get_offline_multiplier()
+	var max_offline: float = balance.get("offline_max_seconds", 3600)
+	max_offline *= research.get_offline_multiplier() * prestige.get_offline_mult()
 	var capped: float = minf(seconds, max_offline)
-	var energy_ratio: float = balance.get("offline_energy_ratio", 0.5)
-	var tech_ratio: float = balance.get("offline_tech_ratio", 0.5)
+	var energy_ratio: float = balance.get("offline_energy_ratio", 0.25)
+	var tech_ratio: float = balance.get("offline_tech_ratio", 0.25)
 	var energy_gained: float = get_total_production("energy") * capped * energy_ratio
 	var tech_gained: float = get_total_production("tech") * capped * tech_ratio
 	return {
@@ -189,6 +196,28 @@ func claim_offline_gains(multiplier: float = 1.0) -> void:
 		add_resource("tech", t)
 	_pending_offline_gains = {}
 
+# ── Prestige ─────────────────────────────────────────────────────────────────
+
+func do_prestige() -> void:
+	var orbits_gained := prestige.get_pending_orbits()
+	prestige.orbits += orbits_gained
+	prestige.prestige_count += 1
+	prestige.total_energy_produced = 0.0
+	# Reset run state
+	energy = prestige.get_starting_energy(float(balance.get("starting_energy", 10.0)))
+	tech = 0.0
+	for module_id in module_counts:
+		module_counts[module_id] = 0
+	research.setup(research.data)
+	# Auto-start talent
+	if prestige.has_auto_start():
+		research._levels["auto_tap"] = 1
+	save()
+	EventBus.prestige_completed.emit(orbits_gained)
+	EventBus.game_ready.emit()
+
+# ── Save/load ────────────────────────────────────────────────────────────────
+
 func _apply_save(data: Dictionary) -> void:
 	energy = float(data.get("energy", 0.0))
 	tech = float(data.get("tech", 0.0))
@@ -197,6 +226,7 @@ func _apply_save(data: Dictionary) -> void:
 		if module_id in module_counts:
 			module_counts[module_id] = int(saved_modules[module_id])
 	research.load_state(data.get("research_levels", {}))
+	prestige.load_state(data.get("prestige", {}))
 
 func get_save_data() -> Dictionary:
 	return {
@@ -204,6 +234,7 @@ func get_save_data() -> Dictionary:
 		"tech": tech,
 		"module_counts": module_counts.duplicate(),
 		"research_levels": research.get_state(),
+		"prestige": prestige.get_state(),
 	}
 
 func save() -> void:
@@ -216,6 +247,7 @@ func full_reset() -> void:
 	for module_id in module_counts:
 		module_counts[module_id] = 0
 	research.setup(research.data)
+	prestige.reset()
 	EventBus.game_ready.emit()
 
 func _notification(what: int) -> void:

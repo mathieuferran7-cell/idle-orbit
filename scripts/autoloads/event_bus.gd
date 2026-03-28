@@ -20,5 +20,8 @@ signal research_node_unlocked(node_id: String)
 # Offline
 signal offline_gains_ready(gains: Dictionary)
 
+# Prestige
+signal prestige_completed(orbits_gained: int)
+
 # Lifecycle
 signal game_ready()

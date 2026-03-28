@@ -10,6 +10,8 @@ extends Control
 @onready var research_panel: Control = %ResearchPanel
 @onready var tab_modules_btn: Button = %TabModulesBtn
 @onready var tab_research_btn: Button = %TabResearchBtn
+@onready var tab_prestige_btn: Button = %TabPrestigeBtn
+@onready var prestige_panel: Control = %PrestigePanel
 @onready var mining_manager: MiningManager = $MiningManager
 
 var _module_buttons: Dictionary = {}
@@ -28,6 +30,7 @@ func _ready() -> void:
 	asteroid_btn.pressed.connect(_on_asteroid_tapped)
 	tab_modules_btn.pressed.connect(_show_modules_tab)
 	tab_research_btn.pressed.connect(_show_research_tab)
+	tab_prestige_btn.pressed.connect(_show_prestige_tab)
 
 func _on_game_ready() -> void:
 	mining_manager.setup(GameManager.balance)
@@ -39,14 +42,26 @@ func _on_game_ready() -> void:
 func _show_modules_tab() -> void:
 	modules_panel.visible = true
 	research_panel.visible = false
+	prestige_panel.visible = false
 	tab_modules_btn.disabled = true
 	tab_research_btn.disabled = false
+	tab_prestige_btn.disabled = false
 
 func _show_research_tab() -> void:
 	modules_panel.visible = false
 	research_panel.visible = true
+	prestige_panel.visible = false
 	tab_modules_btn.disabled = false
 	tab_research_btn.disabled = true
+	tab_prestige_btn.disabled = false
+
+func _show_prestige_tab() -> void:
+	modules_panel.visible = false
+	research_panel.visible = false
+	prestige_panel.visible = true
+	tab_modules_btn.disabled = false
+	tab_research_btn.disabled = false
+	tab_prestige_btn.disabled = true
 
 func _on_asteroid_tapped() -> void:
 	mining_manager.tap()

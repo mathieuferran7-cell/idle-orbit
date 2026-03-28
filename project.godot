@@ -34,7 +34,6 @@ window/size/viewport_width=1080
 window/size/viewport_height=1920
 window/size/resizable=false
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
 
 [rendering]
 

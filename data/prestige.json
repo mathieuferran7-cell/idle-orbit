@@ -1,0 +1,90 @@
+{
+	"energy_plus": {
+		"name": "Énergie+",
+		"tier": 1,
+		"per_level": 0.15,
+		"cost": 5,
+		"max": 5,
+		"desc": "+15% production énergie/niv"
+	},
+	"tech_plus": {
+		"name": "Tech+",
+		"tier": 1,
+		"per_level": 0.15,
+		"cost": 5,
+		"max": 5,
+		"desc": "+15% tech/tap par niv"
+	},
+	"start_plus": {
+		"name": "Départ+",
+		"tier": 1,
+		"per_level": 30,
+		"cost": 4,
+		"max": 5,
+		"desc": "+30 énergie de départ/niv"
+	},
+	"research_minus": {
+		"name": "Recherche-",
+		"tier": 2,
+		"per_level": 0.10,
+		"cost": 12,
+		"max": 5,
+		"desc": "-10% coût recherche/niv"
+	},
+	"speed_plus": {
+		"name": "Vitesse+",
+		"tier": 2,
+		"per_level": 0.08,
+		"cost": 15,
+		"max": 5,
+		"desc": "+8% vitesse globale/niv"
+	},
+	"auto_start": {
+		"name": "Drone Init",
+		"tier": 2,
+		"per_level": 1,
+		"cost": 20,
+		"max": 1,
+		"desc": "Commence avec auto-tap"
+	},
+	"energy_plus2": {
+		"name": "Énergie++",
+		"tier": 3,
+		"per_level": 0.25,
+		"cost": 30,
+		"max": 3,
+		"desc": "+25% production énergie/niv"
+	},
+	"offline_plus": {
+		"name": "Offline+",
+		"tier": 3,
+		"per_level": 0.20,
+		"cost": 25,
+		"max": 3,
+		"desc": "+20% gains offline/niv"
+	},
+	"module_discount": {
+		"name": "Modules-",
+		"tier": 3,
+		"per_level": 0.08,
+		"cost": 20,
+		"max": 5,
+		"desc": "-8% coût modules/niv"
+	},
+	"orbit_bonus": {
+		"name": "Orbit+",
+		"tier": 4,
+		"per_level": 0.15,
+		"cost": 50,
+		"max": 3,
+		"desc": "+15% Orbits gagnés/niv"
+	},
+	"mega_speed": {
+		"name": "Warp",
+		"tier": 4,
+		"per_level": 0.15,
+		"cost": 80,
+		"max": 2,
+		"desc": "+15% vitesse globale/niv"
+	}
+}
