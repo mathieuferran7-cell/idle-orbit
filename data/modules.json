@@ -1,0 +1,83 @@
+{
+	"solar_panel": {
+		"name": "Panneau Solaire",
+		"description": "Capte l'énergie stellaire ambiante.",
+		"resource": "energy",
+		"base_cost": 10.0,
+		"cost_growth": 1.15,
+		"base_production": 1.0,
+		"unlock_condition": null
+	},
+	"orbital_reactor": {
+		"name": "Réacteur Orbital",
+		"description": "Génère de l'énergie par réaction en chaîne.",
+		"resource": "energy",
+		"base_cost": 100.0,
+		"cost_growth": 1.15,
+		"base_production": 5.0,
+		"unlock_condition": {
+			"module": "solar_panel",
+			"count": 5
+		}
+	},
+	"fusion_generator": {
+		"name": "Générateur Fusion",
+		"description": "Fusion nucléaire compacte. Rendement supérieur.",
+		"resource": "energy",
+		"base_cost": 1500.0,
+		"cost_growth": 1.15,
+		"base_production": 25.0,
+		"unlock_condition": {
+			"module": "orbital_reactor",
+			"count": 5
+		}
+	},
+	"quantum_harvester": {
+		"name": "Collecteur Quantique",
+		"description": "Extrait l'énergie du vide quantique.",
+		"resource": "energy",
+		"base_cost": 25000.0,
+		"cost_growth": 1.15,
+		"base_production": 120.0,
+		"unlock_condition": {
+			"module": "fusion_generator",
+			"count": 5
+		}
+	},
+	"mining_probe": {
+		"name": "Sonde Minière",
+		"description": "Drone autonome qui mine les astéroïdes proches.",
+		"resource": "tech",
+		"base_cost": 500.0,
+		"cost_growth": 1.15,
+		"base_production": 0.5,
+		"unlock_condition": {
+			"module": "orbital_reactor",
+			"count": 1
+		}
+	},
+	"orbital_drill": {
+		"name": "Foreuse Orbitale",
+		"description": "Foreuse lourde ancrée sur un astéroïde capturé.",
+		"resource": "tech",
+		"base_cost": 6000.0,
+		"cost_growth": 1.15,
+		"base_production": 3.0,
+		"unlock_condition": {
+			"module": "mining_probe",
+			"count": 5
+		}
+	},
+	"quantum_extractor": {
+		"name": "Extracteur Quantique",
+		"description": "Décompose la matière en données technologiques pures.",
+		"resource": "tech",
+		"base_cost": 75000.0,
+		"cost_growth": 1.15,
+		"base_production": 15.0,
+		"unlock_condition": {
+			"module": "orbital_drill",
+			"count": 5
+		}
+	}
+}

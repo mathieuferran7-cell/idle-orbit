@@ -1,0 +1,78 @@
+{
+	"auto_tap": {
+		"name": "Drone Mineur",
+		"description": "Auto-tape l'astéroïde toutes les 5s.",
+		"branch": "root",
+		"position": [1, 0],
+		"max_level": 1,
+		"base_cost": 25,
+		"cost_growth": 1.0,
+		"requires": [],
+		"effect": { "type": "auto_tap_interval" },
+		"effect_per_level": 0.0,
+		"effect_values": [5.0],
+		"cost_values": [25]
+	},
+	"auto_tap_upgrade": {
+		"name": "Drone+",
+		"description": "Réduit l'intervalle d'auto-tap.",
+		"branch": "mining",
+		"position": [1, 1],
+		"max_level": 2,
+		"base_cost": 500,
+		"cost_growth": 1.0,
+		"requires": ["auto_tap"],
+		"effect": { "type": "auto_tap_interval" },
+		"effect_per_level": 0.0,
+		"effect_values": [2.0, 1.0],
+		"cost_values": [500, 2000]
+	},
+	"nebula_boost": {
+		"name": "Nébuleuse",
+		"description": "+15% production Énergie par niveau.",
+		"branch": "energy",
+		"position": [0, 1],
+		"max_level": 5,
+		"base_cost": 1500,
+		"cost_growth": 2.5,
+		"requires": ["auto_tap"],
+		"effect": { "type": "energy_multiplier" },
+		"effect_per_level": 0.15
+	},
+	"tech_boost": {
+		"name": "Extracteur+",
+		"description": "+50% Tech par tap par niveau.",
+		"branch": "mining",
+		"position": [1, 2],
+		"max_level": 3,
+		"base_cost": 4000,
+		"cost_growth": 2.5,
+		"requires": ["auto_tap_upgrade"],
+		"effect": { "type": "tech_tap_multiplier" },
+		"effect_per_level": 0.5
+	},
+	"module_discount": {
+		"name": "Ingénierie",
+		"description": "-10% coût des modules par niveau.",
+		"branch": "automation",
+		"position": [2, 1],
+		"max_level": 3,
+		"base_cost": 3000,
+		"cost_growth": 2.5,
+		"requires": ["auto_tap"],
+		"effect": { "type": "module_cost_multiplier" },
+		"effect_per_level": 0.10
+	},
+	"offline_boost": {
+		"name": "Veille Auto",
+		"description": "+30% durée hors-ligne par niveau.",
+		"branch": "automation",
+		"position": [2, 2],
+		"max_level": 3,
+		"base_cost": 8000,
+		"cost_growth": 2.5,
+		"requires": ["module_discount"],
+		"effect": { "type": "offline_multiplier" },
+		"effect_per_level": 0.30
+	}
+}

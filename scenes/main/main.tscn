@@ -1,0 +1,160 @@
+[gd_scene load_steps=4 format=3 uid="uid://main_scene"]
+
+[ext_resource type="Script" path="res://scripts/ui/main_ui.gd" id="1_main_ui"]
+[ext_resource type="Script" path="res://scripts/core/mining_manager.gd" id="2_mining"]
+[ext_resource type="Script" path="res://scripts/ui/research_ui.gd" id="3_research_ui"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main_ui")
+
+[node name="MiningManager" type="Node" parent="."]
+script = ExtResource("2_mining")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.06, 0.06, 0.12, 1)
+
+[node name="RootVBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 0
+
+[node name="HeaderMargin" type="MarginContainer" parent="RootVBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_top = 60
+theme_override_constants/margin_bottom = 20
+
+[node name="HeaderVBox" type="VBoxContainer" parent="RootVBox/HeaderMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="RootVBox/HeaderMargin/HeaderVBox"]
+layout_mode = 2
+text = "IDLE ORBIT"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 52
+
+[node name="ResourcesRow" type="HBoxContainer" parent="RootVBox/HeaderMargin/HeaderVBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 80
+
+[node name="EnergyBox" type="VBoxContainer" parent="RootVBox/HeaderMargin/HeaderVBox/ResourcesRow"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="EnergyLabel" type="Label" parent="RootVBox/HeaderMargin/HeaderVBox/ResourcesRow/EnergyBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "⚡ 0"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 72
+
+[node name="EnergyRateLabel" type="Label" parent="RootVBox/HeaderMargin/HeaderVBox/ResourcesRow/EnergyBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0/s"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(0.6, 0.8, 1.0, 0.7)
+
+[node name="TechBox" type="VBoxContainer" parent="RootVBox/HeaderMargin/HeaderVBox/ResourcesRow"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TechLabel" type="Label" parent="RootVBox/HeaderMargin/HeaderVBox/ResourcesRow/TechBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🔧 0"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 72
+
+[node name="TechRateLabel" type="Label" parent="RootVBox/HeaderMargin/HeaderVBox/ResourcesRow/TechBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "tap!"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(0.6, 1.0, 0.7, 0.7)
+
+[node name="AsteroidZone" type="Button" parent="RootVBox/HeaderMargin/HeaderVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 260)
+layout_mode = 2
+text = "☄  ASTEROIDE"
+theme_override_font_sizes/font_size = 48
+
+[node name="HSep" type="HSeparator" parent="RootVBox"]
+layout_mode = 2
+
+[node name="TabBar" type="HBoxContainer" parent="RootVBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="TabModulesBtn" type="Button" parent="RootVBox/TabBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "MODULES"
+theme_override_font_sizes/font_size = 30
+
+[node name="TabResearchBtn" type="Button" parent="RootVBox/TabBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "RECHERCHE ✦"
+theme_override_font_sizes/font_size = 30
+
+[node name="HSep2" type="HSeparator" parent="RootVBox"]
+layout_mode = 2
+
+[node name="ContentArea" type="Control" parent="RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+clip_contents = true
+
+[node name="ModulesPanel" type="MarginContainer" parent="RootVBox/ContentArea"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="ScrollContainer" type="ScrollContainer" parent="RootVBox/ContentArea/ModulesPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ModulesContainer" type="VBoxContainer" parent="RootVBox/ContentArea/ModulesPanel/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="ResearchPanel" type="Control" parent="RootVBox/ContentArea"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("3_research_ui")
+
