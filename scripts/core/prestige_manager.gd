@@ -7,18 +7,22 @@ var prestige_count: int = 0
 var talent_levels: Dictionary = {}
 var total_energy_produced: float = 0.0
 
-const THRESHOLD_BASE := 500_000.0
-const THRESHOLD_GROWTH := 3.0
+var _threshold_base: float = 500_000.0
+var _threshold_growth: float = 3.0
 
 func setup(prestige_data: Dictionary) -> void:
 	data = prestige_data
 	for tid in data:
 		talent_levels[tid] = 0
 
+func setup_balance(balance: Dictionary) -> void:
+	_threshold_base = float(balance.get("prestige_threshold_base", 500000.0))
+	_threshold_growth = float(balance.get("prestige_threshold_growth", 3.0))
+
 # ── Prestige logic ───────────────────────────────────────────────────────────
 
 func get_threshold() -> float:
-	return THRESHOLD_BASE * pow(THRESHOLD_GROWTH, prestige_count)
+	return _threshold_base * pow(_threshold_growth, prestige_count)
 
 func can_prestige() -> bool:
 	return total_energy_produced >= get_threshold()

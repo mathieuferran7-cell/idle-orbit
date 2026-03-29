@@ -31,13 +31,26 @@ func _ready() -> void:
 	tab_modules_btn.pressed.connect(_show_modules_tab)
 	tab_research_btn.pressed.connect(_show_research_tab)
 	tab_prestige_btn.pressed.connect(_show_prestige_tab)
+	# If returning from minigame, emit game_ready ourselves (autoload _post_init won't re-fire)
+	if GameManager._post_prestige_pending >= 0:
+		var orbits := GameManager._post_prestige_pending
+		GameManager._post_prestige_pending = -1
+		call_deferred("_emit_post_prestige", orbits)
+
+func _emit_post_prestige(orbits: int) -> void:
+	EventBus.game_ready.emit()
+	EventBus.prestige_completed.emit(orbits)
 
 func _on_game_ready() -> void:
 	mining_manager.setup(GameManager.balance)
 	_build_buy_mode_toggle()
 	_build_module_list()
 	_refresh_all()
-	_show_modules_tab()
+	if GameManager._return_to_prestige_tab:
+		GameManager._return_to_prestige_tab = false
+		_show_prestige_tab()
+	else:
+		_show_modules_tab()
 
 func _show_modules_tab() -> void:
 	modules_panel.visible = true

@@ -101,6 +101,15 @@ func _build_ui() -> void:
 	_prestige_btn.pressed.connect(_on_prestige_pressed)
 	inner.add_child(_prestige_btn)
 
+	# DEV: test minigame without threshold
+	var dev_btn := Button.new()
+	dev_btn.text = "[DEV] Lancer Last Stand"
+	dev_btn.custom_minimum_size = Vector2(0, 80)
+	dev_btn.add_theme_font_size_override("font_size", 26)
+	dev_btn.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+	dev_btn.pressed.connect(_on_dev_minigame)
+	inner.add_child(dev_btn)
+
 	_refresh_all()
 
 func _create_talent_row(tid: String) -> PanelContainer:
@@ -215,4 +224,7 @@ func _on_talent_buy(tid: String) -> void:
 
 func _on_prestige_pressed() -> void:
 	if GameManager.prestige.can_prestige():
-		GameManager.do_prestige()
+		GameManager.start_prestige_minigame()
+
+func _on_dev_minigame() -> void:
+	GameManager.start_prestige_minigame()

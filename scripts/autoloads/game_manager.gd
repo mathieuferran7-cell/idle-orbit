@@ -11,6 +11,11 @@ var module_counts: Dictionary = {}
 
 var _tick_accumulator: float = 0.0
 var _pending_offline_gains: Dictionary = {}
+var _minigame_data: Dictionary = {}
+var _pre_prestige_orbits: int = 0
+var _in_minigame: bool = false
+var _post_prestige_pending: int = -1
+var _return_to_prestige_tab: bool = false
 
 func _ready() -> void:
 	_load_data_files()
@@ -41,7 +46,9 @@ func _load_data_files() -> void:
 	add_child(research)
 	prestige = PrestigeManager.new()
 	prestige.setup(_read_json("res://data/prestige.json"))
+	prestige.setup_balance(balance)
 	add_child(prestige)
+	_minigame_data = _read_json("res://data/minigame.json")
 
 func _read_json(path: String) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
@@ -55,6 +62,8 @@ func _read_json(path: String) -> Dictionary:
 	return json.data
 
 func _process(delta: float) -> void:
+	if _in_minigame:
+		return
 	_tick_accumulator += delta
 	var tick_interval: float = balance.get("tick_interval", 0.25)
 	while _tick_accumulator >= tick_interval:
@@ -196,6 +205,52 @@ func claim_offline_gains(multiplier: float = 1.0) -> void:
 		add_resource("tech", t)
 	_pending_offline_gains = {}
 
+# ── Minigame ─────────────────────────────────────────────────────────────────
+
+func start_prestige_minigame() -> void:
+	_pre_prestige_orbits = prestige.get_pending_orbits()
+	save()
+	_in_minigame = true
+	var scene := load("res://scenes/minigame/last_stand.tscn")
+	get_tree().change_scene_to_packed(scene)
+
+func get_minigame_params() -> Dictionary:
+	var total_energy_modules := 0
+	var total_tech_modules := 0
+	for module_id in modules_data:
+		var res_type: String = modules_data[module_id].get("resource", "")
+		var count: int = module_counts.get(module_id, 0)
+		if res_type == "energy":
+			total_energy_modules += count
+		elif res_type == "tech":
+			total_tech_modules += count
+	return {
+		"total_energy_modules": total_energy_modules,
+		"total_tech_modules": total_tech_modules,
+		"data": _minigame_data,
+		"pending_orbits": _pre_prestige_orbits,
+	}
+
+func complete_prestige_with_bonus(waves_survived: int) -> void:
+	var bonus_per_wave: float = _minigame_data.get("orbit_bonus_per_wave", 0.1)
+	var bonus_mult: float = 1.0 + waves_survived * bonus_per_wave
+	var final_orbits: int = int(_pre_prestige_orbits * bonus_mult)
+	prestige.orbits += final_orbits
+	prestige.prestige_count += 1
+	prestige.total_energy_produced = 0.0
+	energy = prestige.get_starting_energy(float(balance.get("starting_energy", 10.0)))
+	tech = 0.0
+	for module_id in module_counts:
+		module_counts[module_id] = 0
+	research.setup(research.data)
+	if prestige.has_auto_start():
+		research._levels["auto_tap"] = 1
+	_in_minigame = false
+	_return_to_prestige_tab = true
+	_post_prestige_pending = final_orbits
+	save()
+	get_tree().change_scene_to_packed(load("res://scenes/main/main.tscn"))
+
 # ── Prestige ─────────────────────────────────────────────────────────────────
 
 func do_prestige() -> void:
@@ -251,6 +306,8 @@ func full_reset() -> void:
 	EventBus.game_ready.emit()
 
 func _notification(what: int) -> void:
+	if _in_minigame:
+		return
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST or what == NOTIFICATION_WM_CLOSE_REQUEST:
 		save()
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:

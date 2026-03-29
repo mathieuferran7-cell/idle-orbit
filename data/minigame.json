@@ -1,0 +1,67 @@
+{
+	"station": {
+		"base_hp": 10,
+		"hp_per_energy_module": 2,
+		"radius": 60
+	},
+	"turret": {
+		"fire_interval": 1.5,
+		"projectile_speed": 600,
+		"projectile_damage": 1,
+		"range": 900,
+		"orbit_radius": 80
+	},
+	"shockwave": {
+		"damage": 3,
+		"cooldown": 1.5,
+		"arc_degrees": 90,
+		"radius_start": 80,
+		"radius_end": 400,
+		"duration": 0.3
+	},
+	"enemies": {
+		"small_asteroid": {
+			"hp": 1,
+			"speed_min": 100,
+			"speed_max": 200,
+			"radius": 20,
+			"damage_to_station": 1,
+			"color": [0.6, 0.6, 0.5]
+		},
+		"fast_asteroid": {
+			"hp": 1,
+			"speed_min": 300,
+			"speed_max": 400,
+			"radius": 15,
+			"damage_to_station": 1,
+			"color": [0.8, 0.4, 0.3]
+		},
+		"big_asteroid": {
+			"hp": 3,
+			"speed_min": 80,
+			"speed_max": 120,
+			"radius": 40,
+			"damage_to_station": 2,
+			"color": [0.5, 0.45, 0.4]
+		}
+	},
+	"waves": [
+		{ "count": 4,  "types": ["small_asteroid"], "spawn_interval": 1.5 },
+		{ "count": 6,  "types": ["small_asteroid"], "spawn_interval": 1.2 },
+		{ "count": 6,  "types": ["small_asteroid", "fast_asteroid"], "spawn_interval": 1.0 },
+		{ "count": 8,  "types": ["small_asteroid", "fast_asteroid"], "spawn_interval": 0.9 },
+		{ "count": 6,  "types": ["small_asteroid", "big_asteroid"], "spawn_interval": 1.0 },
+		{ "count": 8,  "types": ["fast_asteroid", "big_asteroid"], "spawn_interval": 0.8 },
+		{ "count": 10, "types": ["small_asteroid", "fast_asteroid", "big_asteroid"], "spawn_interval": 0.7 },
+		{ "count": 12, "types": ["small_asteroid", "fast_asteroid", "big_asteroid"], "spawn_interval": 0.6 },
+		{ "count": 15, "types": ["small_asteroid", "fast_asteroid", "big_asteroid"], "spawn_interval": 0.5 },
+		{ "count": 18, "types": ["small_asteroid", "fast_asteroid", "big_asteroid"], "spawn_interval": 0.4 }
+	],
+	"wave_pause_seconds": 3.0,
+	"orbit_bonus_per_wave": 0.1,
+	"spawn_margin": 50,
+	"overflow_wave_count_growth": 3,
+	"overflow_wave_interval_decay": 0.05,
+	"overflow_wave_min_interval": 0.25,
+	"min_swipe_distance": 80
+}
