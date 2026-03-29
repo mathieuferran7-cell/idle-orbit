@@ -48,8 +48,11 @@ func take_damage(amount: int) -> void:
 	_flash_timer = 0.1
 	modulate = Color(3.0, 3.0, 3.0)
 	if hp <= 0:
+		AudioManager.play_sfx("enemy_die")
 		died.emit()
 		queue_free()
+	else:
+		AudioManager.play_sfx("enemy_hit")
 
 func _draw() -> void:
 	draw_circle(Vector2.ZERO, enemy_radius, color)

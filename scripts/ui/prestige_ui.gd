@@ -219,7 +219,7 @@ func _refresh_talent_row(tid: String) -> void:
 
 func _on_talent_buy(tid: String) -> void:
 	if GameManager.prestige.buy_talent(tid):
-		AudioManager.play_sfx("buy")
+		AudioManager.play_sfx("upgrade")
 		_refresh_all()
 
 func _on_prestige_pressed() -> void:

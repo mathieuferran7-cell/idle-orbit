@@ -116,6 +116,7 @@ func _start_wave() -> void:
 	_spawn_timer = 0.5
 	_state = State.WAVE_ACTIVE
 	_update_center_label("VAGUE %d" % (_wave_index + 1))
+	AudioManager.play_sfx("wave_start")
 
 func _get_wave_def(index: int) -> Dictionary:
 	var waves: Array = _data.get("waves", [])
@@ -168,6 +169,7 @@ func _get_edge_spawn(angle: float) -> Vector2:
 
 func _on_station_hit(damage: int) -> void:
 	_station_hp -= damage
+	AudioManager.play_sfx("station_hit")
 	if _station_hp <= 0:
 		_station_hp = 0
 		_game_over()
@@ -177,6 +179,7 @@ func _on_enemy_died() -> void:
 
 func _game_over() -> void:
 	_state = State.GAME_OVER
+	AudioManager.play_sfx("game_over")
 	for enemy in _enemies_node.get_children():
 		enemy.queue_free()
 	for proj in _projectiles_node.get_children():
@@ -224,6 +227,7 @@ func _try_swipe(end_pos: Vector2) -> void:
 	shock.position = CENTER
 	shock.setup(swipe_data, swipe_vec.angle(), _enemies_node)
 	_shockwaves_node.add_child(shock)
+	AudioManager.play_sfx("shockwave")
 
 # ── Drawing ──────────────────────────────────────────────────────────────────
 

@@ -43,6 +43,7 @@ func _fire_at(target: Node2D) -> void:
 	var proj := MinigameProjectile.new()
 	proj.setup(global_position, target.global_position, projectile_speed, projectile_damage)
 	_projectiles_ref.add_child(proj)
+	AudioManager.play_sfx("turret_fire")
 
 func _draw() -> void:
 	draw_circle(Vector2.ZERO, 10.0, Color(0.3, 0.7, 0.9))

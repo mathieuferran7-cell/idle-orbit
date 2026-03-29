@@ -283,7 +283,7 @@ func _close_popup() -> void:
 
 func _on_upgrade_pressed() -> void:
 	if GameManager.research.upgrade(_active_id):
-		AudioManager.play_sfx("buy")
+		AudioManager.play_sfx("upgrade")
 
 func _refresh_popup() -> void:
 	if _active_id.is_empty() or not _popup:
