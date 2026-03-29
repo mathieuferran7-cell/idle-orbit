@@ -1,0 +1,178 @@
+{
+	"distress_signal": {
+		"title": "Signal de détresse",
+		"text": "Un vaisseau endommagé émet un signal de détresse près de votre astéroïde. L'équipage demande de l'aide.",
+		"icon": "📡",
+		"choices": [
+			{
+				"label": "Envoyer une sonde",
+				"desc": "Récupérer des données techniques",
+				"reward": { "type": "tech", "min": 50, "max": 200 }
+			},
+			{
+				"label": "Partager de l'énergie",
+				"desc": "En remerciement, ils boostent vos systèmes",
+				"reward": { "type": "buff", "buff_id": "energy_x2", "duration": 60 }
+			},
+			{
+				"label": "Mission de sauvetage",
+				"desc": "+2 Orbits + 500 Tech",
+				"premium": true,
+				"reward": { "type": "multi", "rewards": [
+					{ "type": "orbits", "amount": 2 },
+					{ "type": "tech", "amount": 500 }
+				]}
+			}
+		]
+	},
+	"crystal_vein": {
+		"title": "Filon de cristaux",
+		"text": "Vos sondes détectent un gisement de cristaux énergétiques dans une faille de l'astéroïde.",
+		"icon": "💎",
+		"choices": [
+			{
+				"label": "Miner le filon",
+				"desc": "Extraction rapide d'énergie brute",
+				"reward": { "type": "energy", "min": 200, "max": 800 }
+			},
+			{
+				"label": "Analyser les cristaux",
+				"desc": "Données tech précieuses",
+				"reward": { "type": "tech", "min": 80, "max": 300 }
+			},
+			{
+				"label": "Extraction complète",
+				"desc": "+1 Panneau Solaire + 500 énergie",
+				"premium": true,
+				"reward": { "type": "multi", "rewards": [
+					{ "type": "module", "module_id": "solar_panel", "count": 1 },
+					{ "type": "energy", "amount": 500 }
+				]}
+			}
+		]
+	},
+	"merchant_ship": {
+		"title": "Vaisseau marchand",
+		"text": "Un marchand itinérant s'approche de votre station. Il propose un échange commercial.",
+		"icon": "🚀",
+		"choices": [
+			{
+				"label": "Troquer des minerais",
+				"desc": "Obtenir de la tech en échange",
+				"reward": { "type": "tech", "min": 100, "max": 400 }
+			},
+			{
+				"label": "Acheter un accélérateur",
+				"desc": "Vitesse x2 pendant 30s",
+				"reward": { "type": "buff", "buff_id": "speed_x2", "duration": 30 }
+			},
+			{
+				"label": "Deal exclusif",
+				"desc": "+1 Sonde Minière + vitesse x2 45s",
+				"premium": true,
+				"reward": { "type": "multi", "rewards": [
+					{ "type": "module", "module_id": "mining_probe", "count": 1 },
+					{ "type": "buff", "buff_id": "speed_x2", "duration": 45 }
+				]}
+			}
+		]
+	},
+	"gravity_anomaly": {
+		"title": "Anomalie gravitationnelle",
+		"text": "Une distorsion spatiale apparaît à proximité. Les instruments s'affolent.",
+		"icon": "🌀",
+		"choices": [
+			{
+				"label": "Observer à distance",
+				"desc": "Collecter des données sûres",
+				"reward": { "type": "tech", "min": 60, "max": 250 }
+			},
+			{
+				"label": "Canaliser l'énergie",
+				"desc": "Production énergie x2 pendant 60s",
+				"reward": { "type": "buff", "buff_id": "energy_x2", "duration": 60 }
+			},
+			{
+				"label": "Traverser l'anomalie",
+				"desc": "+3 Orbits",
+				"premium": true,
+				"reward": { "type": "orbits", "amount": 3 }
+			}
+		]
+	},
+	"orbital_debris": {
+		"title": "Débris orbital",
+		"text": "L'épave d'une ancienne station dérive vers vous. Elle contient encore des composants utilisables.",
+		"icon": "🛸",
+		"choices": [
+			{
+				"label": "Récupérer l'énergie",
+				"desc": "Siphonner les réserves restantes",
+				"reward": { "type": "energy", "min": 300, "max": 1000 }
+			},
+			{
+				"label": "Analyser les systèmes",
+				"desc": "Tech par tap x3 pendant 45s",
+				"reward": { "type": "buff", "buff_id": "tap_x3", "duration": 45 }
+			},
+			{
+				"label": "Restaurer un module",
+				"desc": "+1 Réacteur Orbital",
+				"premium": true,
+				"reward": { "type": "module", "module_id": "orbital_reactor", "count": 1 }
+			}
+		]
+	},
+	"meteor_shower": {
+		"title": "Pluie de météorites",
+		"text": "Une pluie de petits astéroïdes traverse votre secteur. Ils sont riches en minerai rare.",
+		"icon": "☄",
+		"choices": [
+			{
+				"label": "Récolter les minerais",
+				"desc": "Tech brute en abondance",
+				"reward": { "type": "tech", "min": 150, "max": 500 }
+			},
+			{
+				"label": "Fondre les débris",
+				"desc": "Convertir en énergie pure",
+				"reward": { "type": "energy", "min": 400, "max": 1200 }
+			},
+			{
+				"label": "Raffinage avancé",
+				"desc": "+400 Tech + production tech x2 45s",
+				"premium": true,
+				"reward": { "type": "multi", "rewards": [
+					{ "type": "tech", "amount": 400 },
+					{ "type": "buff", "buff_id": "tech_x2", "duration": 45 }
+				]}
+			}
+		]
+	},
+	"ancient_transmission": {
+		"title": "Transmission ancienne",
+		"text": "Vos antennes captent un signal répétitif d'origine inconnue. Il semble très ancien.",
+		"icon": "📻",
+		"choices": [
+			{
+				"label": "Décoder le signal",
+				"desc": "Données techniques cryptées",
+				"reward": { "type": "tech", "min": 100, "max": 350 }
+			},
+			{
+				"label": "Localiser la source",
+				"desc": "Recherche -50% coût pendant 90s",
+				"reward": { "type": "buff", "buff_id": "research_discount", "duration": 90 }
+			},
+			{
+				"label": "Expédition complète",
+				"desc": "+2 Orbits + 1 Sonde Minière",
+				"premium": true,
+				"reward": { "type": "multi", "rewards": [
+					{ "type": "orbits", "amount": 2 },
+					{ "type": "module", "module_id": "mining_probe", "count": 1 }
+				]}
+			}
+		]
+	}
+}

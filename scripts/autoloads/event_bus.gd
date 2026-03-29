@@ -23,5 +23,10 @@ signal offline_gains_ready(gains: Dictionary)
 # Prestige
 signal prestige_completed(orbits_gained: int)
 
+# Events
+signal event_triggered(event_data: Dictionary)
+signal buff_started(buff_id: String, duration: float)
+signal buff_ended(buff_id: String)
+
 # Lifecycle
 signal game_ready()

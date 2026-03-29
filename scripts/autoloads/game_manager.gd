@@ -4,6 +4,7 @@ var balance: Dictionary = {}
 var modules_data: Dictionary = {}
 var research: ResearchManager
 var prestige: PrestigeManager
+var events: EventManager
 
 var energy: float = 0.0
 var tech: float = 0.0
@@ -49,6 +50,9 @@ func _load_data_files() -> void:
 	prestige.setup_balance(balance)
 	add_child(prestige)
 	_minigame_data = _read_json("res://data/minigame.json")
+	events = EventManager.new()
+	events.setup(_read_json("res://data/events.json"), balance)
+	add_child(events)
 
 func _read_json(path: String) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
@@ -86,7 +90,10 @@ func get_total_production(resource_type: String) -> float:
 			total += mod.get("base_production", 0.0) * module_counts.get(module_id, 0)
 	if resource_type == "energy":
 		total *= research.get_energy_multiplier() * prestige.get_energy_mult()
-	total *= prestige.get_global_speed()
+		total *= events.get_buff_multiplier("energy")
+	elif resource_type == "tech":
+		total *= events.get_buff_multiplier("tech")
+	total *= prestige.get_global_speed() * events.get_buff_multiplier("speed")
 	return total
 
 func add_resource(type: String, amount: float) -> void:
@@ -211,6 +218,7 @@ func start_prestige_minigame() -> void:
 	_pre_prestige_orbits = prestige.get_pending_orbits()
 	save()
 	_in_minigame = true
+	events._paused = true
 	var scene := load("res://scenes/minigame/last_stand.tscn")
 	get_tree().change_scene_to_packed(scene)
 
@@ -245,6 +253,7 @@ func complete_prestige_with_bonus(waves_survived: int) -> void:
 	research.setup(research.data)
 	if prestige.has_auto_start():
 		research._levels["auto_tap"] = 1
+	events.reset()
 	_in_minigame = false
 	_return_to_prestige_tab = true
 	_post_prestige_pending = final_orbits
@@ -267,6 +276,7 @@ func do_prestige() -> void:
 	# Auto-start talent
 	if prestige.has_auto_start():
 		research._levels["auto_tap"] = 1
+	events.reset()
 	save()
 	EventBus.prestige_completed.emit(orbits_gained)
 	EventBus.game_ready.emit()

@@ -101,14 +101,32 @@ func _build_ui() -> void:
 	_prestige_btn.pressed.connect(_on_prestige_pressed)
 	inner.add_child(_prestige_btn)
 
-	# DEV: test minigame without threshold
-	var dev_btn := Button.new()
-	dev_btn.text = "[DEV] Lancer Last Stand"
-	dev_btn.custom_minimum_size = Vector2(0, 80)
-	dev_btn.add_theme_font_size_override("font_size", 26)
-	dev_btn.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
-	dev_btn.pressed.connect(_on_dev_minigame)
-	inner.add_child(dev_btn)
+	# ── DEV MENU ─────────────────────────────────────────────────────────
+	inner.add_child(HSeparator.new())
+	var dev_title := Label.new()
+	dev_title.text = "[DEV]"
+	dev_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	dev_title.add_theme_font_size_override("font_size", 24)
+	dev_title.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+	inner.add_child(dev_title)
+
+	var dev_minigame := Button.new()
+	dev_minigame.text = "Lancer Last Stand"
+	dev_minigame.custom_minimum_size = Vector2(0, 70)
+	dev_minigame.add_theme_font_size_override("font_size", 24)
+	dev_minigame.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+	dev_minigame.pressed.connect(_on_dev_minigame)
+	inner.add_child(dev_minigame)
+
+	for eid in GameManager.events.data:
+		var evt: Dictionary = GameManager.events.data[eid]
+		var btn := Button.new()
+		btn.text = "%s %s" % [evt.get("icon", ""), evt.get("title", eid)]
+		btn.custom_minimum_size = Vector2(0, 60)
+		btn.add_theme_font_size_override("font_size", 22)
+		btn.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+		btn.pressed.connect(_on_dev_event.bind(eid))
+		inner.add_child(btn)
 
 	_refresh_all()
 
@@ -228,3 +246,8 @@ func _on_prestige_pressed() -> void:
 
 func _on_dev_minigame() -> void:
 	GameManager.start_prestige_minigame()
+
+func _on_dev_event(eid: String) -> void:
+	var evt: Dictionary = GameManager.events.data[eid].duplicate(true)
+	evt["id"] = eid
+	EventBus.event_triggered.emit(evt)

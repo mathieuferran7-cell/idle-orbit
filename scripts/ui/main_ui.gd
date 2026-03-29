@@ -17,6 +17,8 @@ extends Control
 var _module_buttons: Dictionary = {}
 var _asteroid_tween: Tween
 var _offline_popup: Control = null
+var _event_popup: Control = null
+var _buff_label: Label = null
 var _buy_mode_btn: Button = null
 const BUY_MODES := [1, 10, 25, 0]
 var _buy_mode_index: int = 0
@@ -27,6 +29,9 @@ func _ready() -> void:
 	EventBus.module_purchased.connect(_on_module_purchased)
 	EventBus.mining_tapped.connect(_on_mining_tapped)
 	EventBus.offline_gains_ready.connect(_on_offline_gains_ready)
+	EventBus.event_triggered.connect(_on_event_triggered)
+	EventBus.buff_started.connect(_on_buff_changed)
+	EventBus.buff_ended.connect(_on_buff_ended)
 	asteroid_btn.pressed.connect(_on_asteroid_tapped)
 	tab_modules_btn.pressed.connect(_show_modules_tab)
 	tab_research_btn.pressed.connect(_show_research_tab)
@@ -44,6 +49,7 @@ func _emit_post_prestige(orbits: int) -> void:
 func _on_game_ready() -> void:
 	mining_manager.setup(GameManager.balance)
 	_build_buy_mode_toggle()
+	_build_buff_label()
 	_build_module_list()
 	_refresh_all()
 	if GameManager._return_to_prestige_tab:
@@ -91,6 +97,18 @@ func _on_mining_tapped(_tech_gained: float) -> void:
 		asteroid_btn, "modulate", Color(1.4, 1.2, 0.6), 0.06
 	)
 	_asteroid_tween.tween_property(asteroid_btn, "modulate", Color(1.0, 1.0, 1.0), 0.15)
+
+func _build_buff_label() -> void:
+	if _buff_label and is_instance_valid(_buff_label):
+		return
+	# Insert below AsteroidZone in the header VBox
+	var header_vbox: VBoxContainer = asteroid_btn.get_parent()
+	_buff_label = Label.new()
+	_buff_label.name = "BuffLabel"
+	_buff_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_buff_label.add_theme_font_size_override("font_size", 24)
+	_buff_label.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
+	header_vbox.add_child(_buff_label)
 
 func _build_buy_mode_toggle() -> void:
 	if _buy_mode_btn and is_instance_valid(_buy_mode_btn):
@@ -201,6 +219,7 @@ func _refresh_all() -> void:
 		tech_rate_label.text = "tap!"
 
 	asteroid_btn.disabled = not mining_manager.can_tap()
+	_refresh_buffs()
 
 	for module_id in _module_buttons:
 		_refresh_module_row(module_id)
@@ -370,3 +389,137 @@ func _on_offline_collect(multiplier: float) -> void:
 	if _offline_popup:
 		_offline_popup.queue_free()
 		_offline_popup = null
+
+# ── Event Popup (FTL style) ──────────────────────────────────────────────────
+
+func _on_event_triggered(event_data: Dictionary) -> void:
+	_build_event_popup(event_data)
+
+func _on_buff_changed(_buff_id: String, _duration: float = 0.0) -> void:
+	_refresh_buffs()
+
+func _on_buff_ended(_buff_id: String) -> void:
+	_refresh_buffs()
+
+func _refresh_buffs() -> void:
+	if not _buff_label or not is_instance_valid(_buff_label):
+		return
+	var buffs := GameManager.events.get_active_buffs()
+	if buffs.is_empty():
+		_buff_label.text = ""
+		return
+	var parts: Array[String] = []
+	for buff in buffs:
+		var icon := _buff_icon(buff.id)
+		parts.append("%s %ds" % [icon, int(buff.remaining)])
+	_buff_label.text = "  ".join(parts)
+
+func _buff_icon(buff_id: String) -> String:
+	match buff_id:
+		"energy_x2": return "⚡x2"
+		"tech_x2": return "🔧x2"
+		"speed_x2": return "⏩x2"
+		"tap_x3": return "👆x3"
+		"research_discount": return "🔬-50%"
+		_: return buff_id
+
+func _build_event_popup(event_data: Dictionary) -> void:
+	if _event_popup:
+		_event_popup.queue_free()
+
+	_event_popup = Control.new()
+	_event_popup.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_event_popup.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_event_popup)
+
+	var bg := ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.8)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	_event_popup.add_child(bg)
+
+	var card := PanelContainer.new()
+	card.set_anchor(SIDE_LEFT, 0.5)
+	card.set_anchor(SIDE_RIGHT, 0.5)
+	card.set_anchor(SIDE_TOP, 0.5)
+	card.set_anchor(SIDE_BOTTOM, 0.5)
+	card.set_offset(SIDE_LEFT, -460)
+	card.set_offset(SIDE_RIGHT, 460)
+	card.set_offset(SIDE_TOP, -440)
+	card.set_offset(SIDE_BOTTOM, 440)
+	_event_popup.add_child(card)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 40)
+	margin.add_theme_constant_override("margin_right", 40)
+	margin.add_theme_constant_override("margin_top", 36)
+	margin.add_theme_constant_override("margin_bottom", 36)
+	card.add_child(margin)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 16)
+	margin.add_child(vbox)
+
+	# Title with icon
+	var icon: String = event_data.get("icon", "")
+	var title_text: String = event_data.get("title", "Événement")
+	var title := Label.new()
+	title.text = "%s  %s" % [icon, title_text]
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 42)
+	vbox.add_child(title)
+
+	vbox.add_child(HSeparator.new())
+
+	# Body text
+	var body := Label.new()
+	body.text = event_data.get("text", "")
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_theme_font_size_override("font_size", 28)
+	body.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75))
+	vbox.add_child(body)
+
+	vbox.add_child(HSeparator.new())
+
+	# Choices
+	var choices: Array = event_data.get("choices", [])
+	for i in choices.size():
+		var choice: Dictionary = choices[i]
+		var is_premium: bool = choice.get("premium", false)
+		var btn := Button.new()
+		var label_text: String = choice.get("label", "Choix")
+		var desc_text: String = choice.get("desc", "")
+		if is_premium:
+			btn.text = "📺  %s\n%s" % [label_text, desc_text]
+			btn.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		else:
+			btn.text = "%s\n%s" % [label_text, desc_text]
+		btn.custom_minimum_size = Vector2(0, 90)
+		btn.add_theme_font_size_override("font_size", 26)
+		btn.pressed.connect(_on_event_choice.bind(choice.get("reward", {})))
+		vbox.add_child(btn)
+
+func _on_event_choice(reward: Dictionary) -> void:
+	var result_text := GameManager.events.apply_reward(reward)
+	GameManager.events.on_choice_made()
+	if _event_popup:
+		_event_popup.queue_free()
+		_event_popup = null
+	_show_reward_toast(result_text)
+
+func _show_reward_toast(text: String) -> void:
+	var toast := Label.new()
+	toast.text = text
+	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	toast.set_offset(SIDE_TOP, 160)
+	toast.set_offset(SIDE_LEFT, -400)
+	toast.set_offset(SIDE_RIGHT, 400)
+	toast.add_theme_font_size_override("font_size", 40)
+	toast.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+	toast.modulate.a = 1.0
+	add_child(toast)
+	var tw := create_tween()
+	tw.tween_interval(1.5)
+	tw.tween_property(toast, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(toast.queue_free)
