@@ -147,20 +147,24 @@ func _create_module_row(module_id: String) -> PanelContainer:
 
 	var panel := PanelContainer.new()
 	panel.name = module_id
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
 
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 16)
 	margin.add_theme_constant_override("margin_right", 16)
 	margin.add_theme_constant_override("margin_top", 8)
 	margin.add_theme_constant_override("margin_bottom", 8)
+	margin.mouse_filter = Control.MOUSE_FILTER_PASS
 	panel.add_child(margin)
 
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 12)
+	hbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	margin.add_child(hbox)
 
 	var info_vbox := VBoxContainer.new()
 	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_vbox.mouse_filter = Control.MOUSE_FILTER_PASS
 
 	var name_label := Label.new()
 	name_label.name = "NameLabel"

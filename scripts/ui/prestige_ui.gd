@@ -42,6 +42,7 @@ func _build_ui() -> void:
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 16)
+	vbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	scroll.add_child(vbox)
 
 	# Margin
@@ -50,10 +51,12 @@ func _build_ui() -> void:
 	margin.add_theme_constant_override("margin_right", 24)
 	margin.add_theme_constant_override("margin_top", 12)
 	margin.add_theme_constant_override("margin_bottom", 12)
+	margin.mouse_filter = Control.MOUSE_FILTER_PASS
 	vbox.add_child(margin)
 
 	var inner := VBoxContainer.new()
 	inner.add_theme_constant_override("separation", 16)
+	inner.mouse_filter = Control.MOUSE_FILTER_PASS
 	margin.add_child(inner)
 
 	# Header
@@ -135,20 +138,24 @@ func _create_talent_row(tid: String) -> PanelContainer:
 
 	var panel := PanelContainer.new()
 	panel.name = tid
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
 
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 16)
 	margin.add_theme_constant_override("margin_right", 16)
 	margin.add_theme_constant_override("margin_top", 8)
 	margin.add_theme_constant_override("margin_bottom", 8)
+	margin.mouse_filter = Control.MOUSE_FILTER_PASS
 	panel.add_child(margin)
 
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 12)
+	hbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	margin.add_child(hbox)
 
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.mouse_filter = Control.MOUSE_FILTER_PASS
 
 	var name_lbl := Label.new()
 	name_lbl.name = "NameLbl"
