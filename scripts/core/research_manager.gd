@@ -109,6 +109,9 @@ func get_tech_tap_multiplier() -> float:
 
 # --- Display helpers ---
 
+func set_level(node_id: String, level: int) -> void:
+	_levels[node_id] = level
+
 func get_effect_label(node_id: String) -> String:
 	var level := get_level(node_id)
 	var node: Dictionary = data.get(node_id, {})

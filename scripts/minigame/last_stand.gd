@@ -2,7 +2,9 @@ extends Node2D
 
 enum State { COUNTDOWN, WAVE_ACTIVE, WAVE_PAUSE, GAME_OVER }
 
-const CENTER := Vector2(540, 960)
+var CENTER := Vector2(540, 960)
+var SCREEN_W := 1080.0
+var SCREEN_H := 1920.0
 
 var _data: Dictionary = {}
 var _params: Dictionary = {}
@@ -32,6 +34,10 @@ var _cooldown_label: Label
 var _game_over_panel: Control
 
 func _ready() -> void:
+	var vp_size := get_viewport().get_visible_rect().size
+	SCREEN_W = vp_size.x
+	SCREEN_H = vp_size.y
+	CENTER = vp_size / 2.0
 	_params = GameManager.get_minigame_params()
 	_data = _params.get("data", {})
 
@@ -155,11 +161,11 @@ func _get_edge_spawn(angle: float) -> Vector2:
 	var dir := Vector2.from_angle(angle)
 	var t_values: Array[float] = []
 	if dir.x > 0.001:
-		t_values.append((1080.0 + margin - CENTER.x) / dir.x)
+		t_values.append((SCREEN_W + margin - CENTER.x) / dir.x)
 	elif dir.x < -0.001:
 		t_values.append((-margin - CENTER.x) / dir.x)
 	if dir.y > 0.001:
-		t_values.append((1920.0 + margin - CENTER.y) / dir.y)
+		t_values.append((SCREEN_H + margin - CENTER.y) / dir.y)
 	elif dir.y < -0.001:
 		t_values.append((-margin - CENTER.y) / dir.y)
 	if t_values.is_empty():
@@ -233,7 +239,7 @@ func _try_swipe(end_pos: Vector2) -> void:
 
 func _draw() -> void:
 	# Background
-	draw_rect(Rect2(0, 0, 1080, 1920), Color(0.04, 0.04, 0.1))
+	draw_rect(Rect2(0, 0, SCREEN_W, SCREEN_H), Color(0.04, 0.04, 0.1))
 
 	# Station
 	var station_radius: float = float(_data.get("station", {}).get("radius", 60))
@@ -278,14 +284,14 @@ func _build_hud() -> void:
 
 	_wave_label = Label.new()
 	_wave_label.position = Vector2(0, 90)
-	_wave_label.size = Vector2(1080, 50)
+	_wave_label.size = Vector2(SCREEN_W, 50)
 	_wave_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_wave_label.add_theme_font_size_override("font_size", 34)
 	_hud.add_child(_wave_label)
 
 	_center_label = Label.new()
 	_center_label.position = Vector2(0, 800)
-	_center_label.size = Vector2(1080, 100)
+	_center_label.size = Vector2(SCREEN_W, 100)
 	_center_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_center_label.add_theme_font_size_override("font_size", 52)
 	_center_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
@@ -293,7 +299,7 @@ func _build_hud() -> void:
 
 	_cooldown_label = Label.new()
 	_cooldown_label.position = Vector2(0, 1780)
-	_cooldown_label.size = Vector2(1080, 60)
+	_cooldown_label.size = Vector2(SCREEN_W, 60)
 	_cooldown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_cooldown_label.add_theme_font_size_override("font_size", 30)
 	_hud.add_child(_cooldown_label)

@@ -31,6 +31,9 @@ func get_pending_orbits() -> int:
 	var base := int(floor(sqrt(total_energy_produced / 1000.0)))
 	return int(base * get_orbit_multiplier())
 
+func add_orbits(count: int) -> void:
+	orbits += count
+
 func track_energy(amount: float) -> void:
 	if amount > 0.0:
 		total_energy_produced += amount

@@ -131,7 +131,7 @@ func apply_reward(reward: Dictionary) -> String:
 			result_parts.append("+%s 🔧" % NumberFormatter.format(amount))
 		"orbits":
 			var amount: int = int(reward.get("amount", 0))
-			GameManager.prestige.orbits += amount
+			GameManager.prestige.add_orbits(amount)
 			EventBus.resource_changed.emit("orbits", float(amount), float(GameManager.prestige.get_available_orbits()))
 			result_parts.append("+%d ⭐" % amount)
 		"buff":
@@ -202,6 +202,29 @@ func reset() -> void:
 	_milestones_triggered.clear()
 	_paused = false
 	_reset_timer()
+
+func get_state() -> Dictionary:
+	var buffs_data: Array = []
+	for buff in _active_buffs:
+		buffs_data.append({"id": buff.id, "remaining": buff.remaining})
+	return {
+		"timer": _timer,
+		"history": _history.duplicate(),
+		"milestones": _milestones_triggered.duplicate(),
+		"buffs": buffs_data,
+	}
+
+func load_state(state: Dictionary) -> void:
+	_timer = float(state.get("timer", _min_interval))
+	_history = []
+	for h in state.get("history", []):
+		_history.append(str(h))
+	_milestones_triggered = {}
+	for k in state.get("milestones", {}):
+		_milestones_triggered[k] = state["milestones"][k]
+	_active_buffs.clear()
+	for b in state.get("buffs", []):
+		_active_buffs.append({"id": str(b.get("id", "")), "remaining": float(b.get("remaining", 0))})
 
 func _reset_timer() -> void:
 	_timer = randf_range(_min_interval, _max_interval)

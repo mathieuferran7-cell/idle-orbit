@@ -33,4 +33,4 @@ func _on_area_entered(area: Area2D) -> void:
 		queue_free()
 
 func _draw() -> void:
-	draw_circle(Vector2.ZERO, 4.0, Color(1.0, 0.9, 0.3))
+	draw_circle(Vector2.ZERO, 5.0, Color(1.0, 0.9, 0.3))

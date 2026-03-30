@@ -29,6 +29,7 @@ func _ready() -> void:
 	EventBus.module_purchased.connect(_on_module_purchased)
 	EventBus.mining_tapped.connect(_on_mining_tapped)
 	EventBus.offline_gains_ready.connect(_on_offline_gains_ready)
+	EventBus.module_unlocked.connect(_on_module_unlocked)
 	EventBus.event_triggered.connect(_on_event_triggered)
 	EventBus.buff_started.connect(_on_buff_changed)
 	EventBus.buff_ended.connect(_on_buff_ended)
@@ -209,6 +210,10 @@ func _on_resource_changed(_type: String, _amount: float, _total: float) -> void:
 	_refresh_all()
 
 func _on_module_purchased(_module_id: String, _count: int) -> void:
+	_refresh_all()
+
+func _on_module_unlocked(_module_id: String) -> void:
+	_build_module_list()
 	_refresh_all()
 
 func _refresh_all() -> void:

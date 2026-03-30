@@ -182,6 +182,12 @@ func buy_module_bulk(module_id: String, amount: int) -> bool:
 	_check_unlocks()
 	return true
 
+func buy_talent(tid: String) -> bool:
+	return prestige.buy_talent(tid)
+
+func upgrade_research(node_id: String) -> bool:
+	return research.upgrade(node_id)
+
 func _check_unlocks() -> void:
 	for module_id in modules_data:
 		if module_counts.get(module_id, 0) == 0 and is_module_unlocked(module_id):
@@ -244,7 +250,7 @@ func complete_prestige_with_bonus(waves_survived: int) -> void:
 	var bonus_per_wave: float = _minigame_data.get("orbit_bonus_per_wave", 0.1)
 	var bonus_mult: float = 1.0 + waves_survived * bonus_per_wave
 	var final_orbits: int = int(_pre_prestige_orbits * bonus_mult)
-	prestige.orbits += final_orbits
+	prestige.add_orbits(final_orbits)
 	prestige.prestige_count += 1
 	prestige.total_energy_produced = 0.0
 	energy = prestige.get_starting_energy(float(balance.get("starting_energy", 10.0)))
@@ -253,7 +259,7 @@ func complete_prestige_with_bonus(waves_survived: int) -> void:
 		module_counts[module_id] = 0
 	research.setup(research.data)
 	if prestige.has_auto_start():
-		research._levels["auto_tap"] = 1
+		research.set_level("auto_tap", 1)
 	events.reset()
 	_in_minigame = false
 	_return_to_prestige_tab = true
@@ -265,7 +271,7 @@ func complete_prestige_with_bonus(waves_survived: int) -> void:
 
 func do_prestige() -> void:
 	var orbits_gained := prestige.get_pending_orbits()
-	prestige.orbits += orbits_gained
+	prestige.add_orbits(orbits_gained)
 	prestige.prestige_count += 1
 	prestige.total_energy_produced = 0.0
 	# Reset run state
@@ -276,7 +282,7 @@ func do_prestige() -> void:
 	research.setup(research.data)
 	# Auto-start talent
 	if prestige.has_auto_start():
-		research._levels["auto_tap"] = 1
+		research.set_level("auto_tap", 1)
 	events.reset()
 	save()
 	EventBus.prestige_completed.emit(orbits_gained)
@@ -293,6 +299,7 @@ func _apply_save(data: Dictionary) -> void:
 			module_counts[module_id] = int(saved_modules[module_id])
 	research.load_state(data.get("research_levels", {}))
 	prestige.load_state(data.get("prestige", {}))
+	events.load_state(data.get("events", {}))
 
 func get_save_data() -> Dictionary:
 	return {
@@ -301,6 +308,7 @@ func get_save_data() -> Dictionary:
 		"module_counts": module_counts.duplicate(),
 		"research_levels": research.get_state(),
 		"prestige": prestige.get_state(),
+		"events": events.get_state(),
 	}
 
 func save() -> void:

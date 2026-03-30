@@ -2,6 +2,7 @@ extends Node
 
 var _ads_config: Dictionary = {}
 var _is_available: bool = false
+var _is_showing: bool = false
 
 # Rewarded
 var _rewarded_ad: RewardedAd = null
@@ -55,10 +56,13 @@ func _preload_rewarded() -> void:
 	RewardedAdLoader.new().load(id, AdRequest.new(), _load_callback)
 
 func show_rewarded(callback: Callable) -> void:
+	if _is_showing:
+		return
 	if not _is_available or _rewarded_ad == null:
 		# Fallback: give reward immediately
 		callback.call()
 		return
+	_is_showing = true
 	_reward_callback = callback
 	_rewarded_ad.full_screen_content_callback = _content_callback
 	_rewarded_ad.show(_reward_listener)
@@ -75,6 +79,7 @@ func _on_user_earned_reward(_item: RewardedItem) -> void:
 		_reward_callback = Callable()
 
 func _on_ad_dismissed() -> void:
+	_is_showing = false
 	if _rewarded_ad:
 		_rewarded_ad.destroy()
 		_rewarded_ad = null
