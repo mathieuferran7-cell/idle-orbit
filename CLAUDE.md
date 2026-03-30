@@ -6,7 +6,7 @@
 - **Concept** : Space station idle — Build, automate, conquer the stars
 - **Genre** : Idle/Incremental + active mining loop + prestige loop + mini-jeu Last Stand + événements FTL
 - **Cible** : Android-first (Godot 4.6)
-- **Play Store** : test fermé actif (Grimoire Culinaire dev account)
+- **Play Store** : test fermé actif (Grimoire Culinaire dev account), v1.0.8 (code 9)
 - **Ce projet est un reboot de Little Orbit v1**
 
 ## Stack technique
@@ -15,7 +15,7 @@
 - **Audio** : 100% procédural (11 SFX) — zéro fichiers .ogg/.wav externes
 - **Build** : Android AAB signé (keystore: idleorbit-release.keystore)
 - **Export** : headless Godot + jarsigner manuel
-- **Services externes** : hooks en place (AdMob rewarded ads), SDK pas intégré
+- **AdMob** : Poing Studios plugin v4.3.1 (rewarded + banner), IDs dans data/ads.json
 - **Simulateur** : Python (`tests/sim_runner.py`) pour valider la balance (single run + multi-prestige)
 - **Privacy** : GitHub Pages (docs/privacy-policy.html)
 
@@ -30,23 +30,24 @@
 ```
 scripts/
 ├── autoloads/      # Singletons globaux (project settings → AutoLoad)
-│   ├── game_manager.gd     # Logique principale, ressources, modules, prestige flow, minigame transition
+│   ├── game_manager.gd     # Logique principale, facades (buy_talent, upgrade_research), prestige flow
 │   ├── save_manager.gd     # Save/load JSON versionné
 │   ├── event_bus.gd        # 13 signaux globaux
-│   └── audio_manager.gd    # 11 SFX procéduraux
+│   ├── audio_manager.gd    # 11 SFX procéduraux
+│   └── ad_manager.gd       # AdMob rewarded + banner, fallback desktop
 ├── core/           # Systèmes de jeu
-│   ├── prestige_manager.gd # Orbits, 11 talents permanents, seuils x3
-│   ├── research_manager.gd # 6 noeuds, get_effective_cost() avec discounts
+│   ├── prestige_manager.gd # Orbits, 11 talents permanents, seuils x3, add_orbits()
+│   ├── research_manager.gd # 6 noeuds, get_effective_cost(), set_level()
 │   ├── mining_manager.gd   # Loop mining actif + auto-tap + module scaling
-│   └── event_manager.gd    # Timer aléatoire, 7 events FTL, 5 buffs, 3 milestones
+│   └── event_manager.gd    # Timer aléatoire, 7 events FTL, 5 buffs, 3 milestones, get_state/load_state
 ├── minigame/       # Mini-jeu Last Stand (transition prestige)
-│   ├── last_stand.gd       # Controller : state machine (COUNTDOWN/WAVE_ACTIVE/WAVE_PAUSE/GAME_OVER)
+│   ├── last_stand.gd       # Controller : state machine, viewport dynamique
 │   ├── enemy.gd            # Area2D : mouvement, HP, 3 types (small/fast/big)
 │   ├── turret.gd           # Auto-target nearest, fire projectile
-│   ├── projectile.gd       # Bullet linéaire, collision Area2D
+│   ├── projectile.gd       # Bullet linéaire, collision Area2D (radius 5px aligné)
 │   └── shockwave.gd        # Cône de choc expandable (swipe), hit detection manuelle
-├── ui/             # Controllers UI (jamais de logique métier)
-│   ├── main_ui.gd          # Header, 3 onglets, modules, offline popup, event popup FTL, buff display
+├── ui/             # Controllers UI (jamais de logique métier — passe par GameManager)
+│   ├── main_ui.gd          # Header, 3 onglets, modules, offline popup, event popup FTL, buff display, banner ad
 │   ├── research_ui.gd      # Constellation de recherche (card.modulate 3 états)
 │   └── prestige_ui.gd      # Arbre de talents, bouton prestige, DEV menu
 └── utils/
@@ -61,7 +62,10 @@ data/                       # SOURCE DE VÉRITÉ pour toute la balance
 ├── prestige.json           # 11 talents sur 4 tiers
 ├── research.json           # 6 noeuds de recherche
 ├── events.json             # 7 événements FTL avec choix + récompenses
-└── minigame.json           # Balance Last Stand (station, tourelles, ennemis, 10 vagues + overflow)
+├── minigame.json           # Balance Last Stand (station, tourelles, ennemis, 10 vagues + overflow)
+└── ads.json                # IDs AdMob (app_id, rewarded_id, banner_id)
+addons/
+└── admob/                  # Plugin Poing Studios v4.3.1
 assets/
 ├── icon.png                # Icône app 1024x1024
 ├── icon_512.png            # Icône Play Store 512x512
@@ -80,8 +84,8 @@ tests/
 4. **Audio procédural** — tout en code GDScript, zéro import de fichiers audio
 5. **Source de vérité unique** — `data/` pour les valeurs, `constants.gd` pour les identifiants/enums uniquement
 6. **Signal-based** — passer par `EventBus` pour la communication inter-systèmes (13 signaux)
-7. **Autoloads pour les services** — GameManager, SaveManager, EventBus, AudioManager en AutoLoad
-8. **Zéro logique métier dans les widgets UI**
+7. **Autoloads pour les services** — GameManager, SaveManager, EventBus, AudioManager, AdManager en AutoLoad
+8. **Zéro logique métier dans les widgets UI** — passer par les facades GameManager (buy_talent, upgrade_research, buy_module)
 9. **Research UI : card.modulate only** — 3 états (BUYABLE=blanc, LOCKED=gris, MAXED=doré), jamais de couleur par label
 10. **Mobile-first** — portrait forcé, MOUSE_FILTER_PASS sur containers dans ScrollContainer, touch-friendly
 
@@ -110,7 +114,7 @@ PRESTIGE
 - **Flow** : prestige_ui → GameManager.start_prestige_minigame() → last_stand.tscn → complete_prestige_with_bonus() → main.tscn (onglet Prestige)
 
 ## Mini-jeu Last Stand
-- Station au centre (540, 960), menaces 360°
+- Station au centre (viewport dynamique), menaces 360°
 - Tourelles auto (nombre = modules tech possédés, min 1)
 - Swipe = onde de choc en cône 90°, cooldown 1.5s, damage 3
 - Station HP = base_hp + modules_énergie * hp_per_module
@@ -121,17 +125,30 @@ PRESTIGE
 
 ## Événements FTL
 - Timer aléatoire (2-5 min) + 3 milestones (premier tier 2, première recherche max, premier prestige)
-- 7 événements narratifs spatiaux avec 3 choix (2 gratuits + 1 premium pub)
+- 7 événements narratifs spatiaux avec 3 choix (2 gratuits + 1 premium pub rewarded)
 - Récompenses : énergie, tech, orbits, buffs temporaires, modules gratuits
 - Scaling proportionnel à sqrt(total_energy_produced)
 - 5 buffs : energy_x2, tech_x2, speed_x2, tap_x3, research_discount
 - Buffs différents se cumulent, même buff additionne les durées
 - Toast résultat après choix
+- État sauvegardé (buffs, history, milestones, timer)
+
+## AdMob
+- **Plugin** : Poing Studios v4.3.1 (addons/admob/)
+- **App ID** : ca-app-pub-2568736669187422~6903408208
+- **Rewarded** : ca-app-pub-2568736669187422/6763807402 (offline x2, event premium, Last Stand continue)
+- **Banner** : ca-app-pub-2568736669187422/5612807024 (bas d'écran pendant idle)
+- **Fallback** : si pas de pub dispo, récompense donnée immédiatement
+- **Protection** : flag _is_showing empêche double-click
+- **Config** : data/ads.json (config-driven)
+- **Note** : permission AD_ID non injectée par le plugin (publié sans autorisation, ads fonctionnent)
 
 ## Export Android
 - **Keystore** : `%APPDATA%\Godot\keystores\idleorbit-release.keystore` (alias: idleorbit, pass: OrbitRelease2026!)
 - **Export** : Godot headless `--export-release "Android"` → jarsigner → idle-orbit-signed.aab
 - **Config** : arm64-v8a, SDK 24-35, portrait forcé (`window/handheld/orientation=1`)
+- **Version actuelle** : code 9, name 1.0.8
+- **Manifeste release** : android/build/src/release/AndroidManifest.xml (INTERNET permission, portrait, AdMob App ID auto-injecté par plugin)
 
 ## Ce qu'on NE reproduit PAS (erreurs v1)
 - Pas de skins incrémentaux par niveau de station
@@ -141,7 +158,6 @@ PRESTIGE
 - Pas de quêtes/missions au départ
 
 ## Mécaniques en attente (ne pas implémenter prématurément)
-- AdMob SDK (hooks en place : offline x2, event premium, Last Stand continue)
 - IAP
 - Cloud save
 - Localisation multilingue
@@ -149,3 +165,4 @@ PRESTIGE
 - Visual polish (sprites, particules)
 - Système de quêtes/missions
 - Icône adaptative Android (foreground/background)
+- Permission AD_ID (fix plugin Poing)
