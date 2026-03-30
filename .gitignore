@@ -19,3 +19,4 @@ Thumbs.db
 # Simulation outputs
 simulation/*.csv
 simulation/*.translation
+tests/*.translation
