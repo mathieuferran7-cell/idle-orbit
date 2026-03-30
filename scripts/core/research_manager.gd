@@ -31,6 +31,12 @@ func get_next_cost(node_id: String) -> float:
 	var growth: float = float(node.get("cost_growth", 1.5))
 	return base * pow(growth, level)
 
+func get_effective_cost(node_id: String) -> float:
+	var base_cost := get_next_cost(node_id)
+	var discount := GameManager.prestige.get_research_discount()
+	var buff := GameManager.events.get_buff_multiplier("research")
+	return base_cost * discount * buff
+
 func can_upgrade(node_id: String) -> bool:
 	if is_maxed(node_id):
 		return false
@@ -40,12 +46,12 @@ func can_upgrade(node_id: String) -> bool:
 	for req in node.get("requires", []):
 		if not is_unlocked(req):
 			return false
-	return GameManager.tech >= get_next_cost(node_id)
+	return GameManager.tech >= get_effective_cost(node_id)
 
 func upgrade(node_id: String) -> bool:
 	if not can_upgrade(node_id):
 		return false
-	var cost := get_next_cost(node_id)
+	var cost := get_effective_cost(node_id)
 	GameManager.tech -= cost
 	EventBus.resource_changed.emit("tech", -cost, GameManager.tech)
 	_levels[node_id] = get_level(node_id) + 1

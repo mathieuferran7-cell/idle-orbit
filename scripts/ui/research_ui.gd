@@ -145,7 +145,7 @@ func _refresh_card(node_id: String) -> void:
 	if r.is_maxed(node_id):
 		cost_lbl.text = ""
 	else:
-		cost_lbl.text = "🔧 %s" % NumberFormatter.format(r.get_next_cost(node_id))
+		cost_lbl.text = "🔧 %s" % NumberFormatter.format(r.get_effective_cost(node_id))
 
 	# ONE color for the entire card via modulate
 	if r.is_maxed(node_id):
@@ -311,5 +311,5 @@ func _refresh_popup() -> void:
 		upgrade_btn.disabled = true
 	else:
 		next_lbl.text = "Niveau %d : %s" % [level + 1, r.get_next_effect_label(_active_id)]
-		upgrade_btn.text = "🔧 %s" % NumberFormatter.format(r.get_next_cost(_active_id))
+		upgrade_btn.text = "🔧 %s" % NumberFormatter.format(r.get_effective_cost(_active_id))
 		upgrade_btn.disabled = not r.can_upgrade(_active_id)

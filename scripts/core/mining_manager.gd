@@ -29,7 +29,8 @@ func _get_module_tap_bonus() -> float:
 	for module_id in GameManager.modules_data:
 		if GameManager.modules_data[module_id].get("resource") == "tech":
 			total_tech_modules += GameManager.module_counts.get(module_id, 0)
-	return 1.0 + 0.10 * total_tech_modules
+	var bonus_per_unit: float = float(GameManager.balance.get("module_tap_bonus_per_unit", 0.10))
+	return 1.0 + bonus_per_unit * total_tech_modules
 
 func tap() -> float:
 	if not can_tap():
