@@ -219,6 +219,7 @@ func start_prestige_minigame() -> void:
 	save()
 	_in_minigame = true
 	events._paused = true
+	AdManager.hide_banner()
 	var scene := load("res://scenes/minigame/last_stand.tscn")
 	get_tree().change_scene_to_packed(scene)
 

@@ -52,6 +52,7 @@ func _on_game_ready() -> void:
 	_build_buff_label()
 	_build_module_list()
 	_refresh_all()
+	AdManager.show_banner()
 	if GameManager._return_to_prestige_tab:
 		GameManager._return_to_prestige_tab = false
 		_show_prestige_tab()
@@ -389,10 +390,18 @@ func _build_offline_popup(gains: Dictionary) -> void:
 	vbox.add_child(ad_btn)
 
 func _on_offline_collect(multiplier: float) -> void:
-	GameManager.claim_offline_gains(multiplier)
-	if _offline_popup:
-		_offline_popup.queue_free()
-		_offline_popup = null
+	if multiplier == 2.0:
+		AdManager.show_rewarded(func():
+			GameManager.claim_offline_gains(2.0)
+			if _offline_popup:
+				_offline_popup.queue_free()
+				_offline_popup = null
+		)
+	else:
+		GameManager.claim_offline_gains(1.0)
+		if _offline_popup:
+			_offline_popup.queue_free()
+			_offline_popup = null
 
 # ── Event Popup (FTL style) ──────────────────────────────────────────────────
 
@@ -500,10 +509,18 @@ func _build_event_popup(event_data: Dictionary) -> void:
 			btn.text = "%s\n%s" % [label_text, desc_text]
 		btn.custom_minimum_size = Vector2(0, 90)
 		btn.add_theme_font_size_override("font_size", 26)
-		btn.pressed.connect(_on_event_choice.bind(choice.get("reward", {})))
+		btn.pressed.connect(_on_event_choice.bind(choice.get("reward", {}), is_premium))
 		vbox.add_child(btn)
 
-func _on_event_choice(reward: Dictionary) -> void:
+func _on_event_choice(reward: Dictionary, is_premium: bool = false) -> void:
+	if is_premium:
+		AdManager.show_rewarded(func():
+			_apply_event_reward(reward)
+		)
+	else:
+		_apply_event_reward(reward)
+
+func _apply_event_reward(reward: Dictionary) -> void:
 	var result_text := GameManager.events.apply_reward(reward)
 	GameManager.events.on_choice_made()
 	if _event_popup:

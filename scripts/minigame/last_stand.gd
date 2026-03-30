@@ -431,15 +431,15 @@ func _show_results_panel() -> void:
 	vbox.add_child(prestige_btn)
 
 func _on_ad_continue() -> void:
-	# Placeholder: rewarded ad would go here
-	# For now, just restart from current wave with HP restored
-	if _game_over_panel:
-		_game_over_panel.queue_free()
-		_game_over_panel = null
-	_station_hp = _station_max_hp
-	_state = State.WAVE_PAUSE
-	_timer = 1.0
-	_update_center_label("ROUND %d" % (_wave_index + 1))
+	AdManager.show_rewarded(func():
+		if _game_over_panel:
+			_game_over_panel.queue_free()
+			_game_over_panel = null
+		_station_hp = _station_max_hp
+		_state = State.WAVE_PAUSE
+		_timer = 1.0
+		_update_center_label("ROUND %d" % (_wave_index + 1))
+	)
 
 func _on_prestige_confirm() -> void:
 	GameManager.complete_prestige_with_bonus(_waves_survived)

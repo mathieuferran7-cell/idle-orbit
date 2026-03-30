@@ -27,6 +27,7 @@ EventBus="*res://scripts/autoloads/event_bus.gd"
 SaveManager="*res://scripts/autoloads/save_manager.gd"
 GameManager="*res://scripts/autoloads/game_manager.gd"
 AudioManager="*res://scripts/autoloads/audio_manager.gd"
+AdManager="*res://scripts/autoloads/ad_manager.gd"
 
 [display]
 
@@ -35,6 +36,10 @@ window/size/viewport_height=1920
 window/size/resizable=false
 window/stretch/mode="canvas_items"
 window/handheld/orientation=1
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/admob/plugin.cfg")
 
 [rendering]
 
