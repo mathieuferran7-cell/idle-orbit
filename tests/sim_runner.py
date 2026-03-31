@@ -125,14 +125,20 @@ PRESTIGE_TALENTS = {
     # Tier 4 — endgame
     "orbit_bonus":    {"name": "Orbit+",       "effect": "orbit_mult",      "per_level": 0.15, "cost": 50,  "max": 3},
     "mega_speed":     {"name": "Warp",         "effect": "global_speed",    "per_level": 0.15, "cost": 80,  "max": 2},
+    # Tier 5 — deep endgame (orbit sink)
+    "module_cost_reduction": {"name": "Ingenierie", "effect": "module_disc", "per_level": 0.06, "cost": 500, "max": 5},
+    "energy_plus3":   {"name": "Energie+++",   "effect": "energy_mult",     "per_level": 0.30, "cost": 800, "max": 3},
+    "prestige_accelerator": {"name": "Accelerateur", "effect": "threshold_disc", "per_level": 0.10, "cost": 1000, "max": 3},
+    "deep_mining":    {"name": "Forage Profond", "effect": "tech_tap_mult", "per_level": 0.20, "cost": 1500, "max": 3},
 }
 
-# Priority: cheap first, then scaling, then endgame
+# Priority: cheap first, then scaling, then endgame, then tier 5
 TALENT_PRIORITY = [
     "energy_plus", "tech_plus", "start_plus",
     "research_minus", "speed_plus", "auto_start",
     "energy_plus2", "module_discount", "offline_plus",
     "orbit_bonus", "mega_speed",
+    "module_cost_reduction", "energy_plus3", "prestige_accelerator", "deep_mining",
 ]
 
 class Prestige:
@@ -144,7 +150,9 @@ class Prestige:
     def get_prestige_threshold(self):
         """Energy totale requise pour prestige. Croissant à chaque cycle."""
         base = 500_000
-        return base * math.pow(3.0, self.prestige_count)
+        accel = self.talents.get("prestige_accelerator", 0) * PRESTIGE_TALENTS["prestige_accelerator"]["per_level"]
+        reduction = max(0.3, 1.0 - accel)
+        return base * math.pow(3.0, self.prestige_count) * reduction
 
     def calculate_orbits(self, total_energy_produced):
         base = int(math.floor(math.sqrt(total_energy_produced / 1000.0)))
@@ -176,10 +184,13 @@ class Prestige:
     def get_energy_mult(self):
         total = self.talents.get("energy_plus", 0) * PRESTIGE_TALENTS["energy_plus"]["per_level"]
         total += self.talents.get("energy_plus2", 0) * PRESTIGE_TALENTS["energy_plus2"]["per_level"]
+        total += self.talents.get("energy_plus3", 0) * PRESTIGE_TALENTS["energy_plus3"]["per_level"]
         return 1.0 + total
 
     def get_tech_tap_mult(self):
-        return 1.0 + self.talents.get("tech_plus", 0) * PRESTIGE_TALENTS["tech_plus"]["per_level"]
+        total = self.talents.get("tech_plus", 0) * PRESTIGE_TALENTS["tech_plus"]["per_level"]
+        total += self.talents.get("deep_mining", 0) * PRESTIGE_TALENTS["deep_mining"]["per_level"]
+        return 1.0 + total
 
     def get_starting_energy(self, base):
         return base + self.talents.get("start_plus", 0) * PRESTIGE_TALENTS["start_plus"]["per_level"]
@@ -194,7 +205,9 @@ class Prestige:
         return max(0.1, 1.0 - total)
 
     def get_module_discount(self):
-        return max(0.1, 1.0 - self.talents.get("module_discount", 0) * PRESTIGE_TALENTS["module_discount"]["per_level"])
+        total = self.talents.get("module_discount", 0) * PRESTIGE_TALENTS["module_discount"]["per_level"]
+        total += self.talents.get("module_cost_reduction", 0) * PRESTIGE_TALENTS["module_cost_reduction"]["per_level"]
+        return max(0.1, 1.0 - total)
 
     def get_orbit_multiplier(self):
         return 1.0 + self.talents.get("orbit_bonus", 0) * PRESTIGE_TALENTS["orbit_bonus"]["per_level"]
