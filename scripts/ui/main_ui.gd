@@ -124,8 +124,12 @@ func _on_mining_tapped(_tech_gained: float) -> void:
 func _show_floating_text(amount: float) -> void:
 	var lbl := Label.new()
 	lbl.text = "+" + NumberFormatter.format(amount) + " 🔧"
-	var buffs: Dictionary = GameManager.events.get_active_buffs()
-	if buffs.has("tap_x3"):
+	var has_tap_buff := false
+	for buff in GameManager.events.get_active_buffs():
+		if buff.get("id", "") == "tap_x3":
+			has_tap_buff = true
+			break
+	if has_tap_buff:
 		lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 	else:
 		lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
