@@ -254,6 +254,7 @@ func _on_enemy_died(enemy: MinigameEnemy) -> void:
 func _game_over() -> void:
 	_state = State.GAME_OVER
 	AudioManager.play_sfx("game_over")
+	EventBus.last_stand_completed.emit(_waves_survived)
 	for enemy in _enemies_node.get_children():
 		enemy.queue_free()
 	for proj in _projectiles_node.get_children():

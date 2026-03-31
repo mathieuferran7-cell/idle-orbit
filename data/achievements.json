@@ -1,0 +1,219 @@
+{
+	"first_solar": {
+		"name": "Premier Panneau",
+		"desc": "Acheter 1 Panneau Solaire",
+		"icon": "☀",
+		"condition": { "type": "module_count", "module": "solar_panel", "count": 1 },
+		"reward": { "type": "energy", "amount": 10 }
+	},
+	"tapper": {
+		"name": "Mineur Débutant",
+		"desc": "100 taps mining",
+		"icon": "⛏",
+		"condition": { "type": "total_taps", "count": 100 },
+		"reward": { "type": "tech", "amount": 5 }
+	},
+	"solar_5": {
+		"name": "Ferme Solaire",
+		"desc": "5 Panneaux Solaires",
+		"icon": "☀",
+		"condition": { "type": "module_count", "module": "solar_panel", "count": 5 },
+		"reward": { "type": "energy", "amount": 50 }
+	},
+	"first_research": {
+		"name": "Curieux",
+		"desc": "Acheter 1 recherche",
+		"icon": "🔬",
+		"condition": { "type": "research_count", "count": 1 },
+		"reward": { "type": "tech", "amount": 10 }
+	},
+	"reactor_unlock": {
+		"name": "Réaction en Chaîne",
+		"desc": "Débloquer le Réacteur Orbital",
+		"icon": "⚛",
+		"condition": { "type": "module_unlocked", "module": "orbital_reactor" },
+		"reward": { "type": "energy", "amount": 100 }
+	},
+	"energy_1k": {
+		"name": "Kilowatt",
+		"desc": "Produire 1 000 énergie",
+		"icon": "⚡",
+		"condition": { "type": "total_energy", "amount": 1000 },
+		"reward": { "type": "tech", "amount": 25 }
+	},
+	"first_tech_module": {
+		"name": "Prospecteur",
+		"desc": "Acheter 1 Sonde Minière",
+		"icon": "🛰",
+		"condition": { "type": "module_count", "module": "mining_probe", "count": 1 },
+		"reward": { "type": "tech", "amount": 50 }
+	},
+	"tapper_1k": {
+		"name": "Mineur Acharné",
+		"desc": "1 000 taps mining",
+		"icon": "⛏",
+		"condition": { "type": "total_taps", "count": 1000 },
+		"reward": { "type": "tech", "amount": 25 }
+	},
+	"energy_10k": {
+		"name": "Mégawatt",
+		"desc": "Produire 10 000 énergie",
+		"icon": "⚡",
+		"condition": { "type": "total_energy", "amount": 10000 },
+		"reward": { "type": "tech", "amount": 50 }
+	},
+	"fusion_unlock": {
+		"name": "Fusion Froide",
+		"desc": "Débloquer le Générateur Fusion",
+		"icon": "🔥",
+		"condition": { "type": "module_unlocked", "module": "fusion_generator" },
+		"reward": { "type": "energy", "amount": 500 }
+	},
+	"auto_tap": {
+		"name": "Automatisation",
+		"desc": "Débloquer l'auto-tap",
+		"icon": "🤖",
+		"condition": { "type": "research_count", "count": 1 },
+		"reward": { "type": "tech", "amount": 20 }
+	},
+	"energy_100k": {
+		"name": "Gigawatt",
+		"desc": "Produire 100 000 énergie",
+		"icon": "⚡",
+		"condition": { "type": "total_energy", "amount": 100000 },
+		"reward": { "type": "tech", "amount": 200 }
+	},
+	"modules_50": {
+		"name": "Constructeur",
+		"desc": "50 modules possédés",
+		"icon": "🏗",
+		"condition": { "type": "total_modules", "count": 50 },
+		"reward": { "type": "energy", "amount": 500 }
+	},
+	"first_prestige": {
+		"name": "Nouveau Départ",
+		"desc": "Compléter 1 prestige",
+		"icon": "🔄",
+		"condition": { "type": "prestige_count", "count": 1 },
+		"reward": { "type": "orbits", "amount": 5 }
+	},
+	"energy_500k": {
+		"name": "Térawatt",
+		"desc": "Produire 500 000 énergie",
+		"icon": "⚡",
+		"condition": { "type": "total_energy", "amount": 500000 },
+		"reward": { "type": "orbits", "amount": 10 }
+	},
+	"quantum_unlock": {
+		"name": "Physique Quantique",
+		"desc": "Débloquer le Collecteur Quantique",
+		"icon": "🌀",
+		"condition": { "type": "module_unlocked", "module": "quantum_harvester" },
+		"reward": { "type": "energy", "amount": 2000 }
+	},
+	"research_max": {
+		"name": "Omniscient",
+		"desc": "Maxer toutes les recherches",
+		"icon": "🧠",
+		"condition": { "type": "research_all_maxed" },
+		"reward": { "type": "orbits", "amount": 15 }
+	},
+	"tapper_10k": {
+		"name": "Mineur Légendaire",
+		"desc": "10 000 taps mining",
+		"icon": "💎",
+		"condition": { "type": "total_taps", "count": 10000 },
+		"reward": { "type": "orbits", "amount": 10 }
+	},
+	"energy_1m": {
+		"name": "Pétawatt",
+		"desc": "Produire 1 000 000 énergie",
+		"icon": "⚡",
+		"condition": { "type": "total_energy", "amount": 1000000 },
+		"reward": { "type": "orbits", "amount": 15 }
+	},
+	"prestige_3": {
+		"name": "Vétéran",
+		"desc": "3 prestiges",
+		"icon": "🔄",
+		"condition": { "type": "prestige_count", "count": 3 },
+		"reward": { "type": "orbits", "amount": 20 }
+	},
+	"last_stand_5": {
+		"name": "Défenseur",
+		"desc": "Survivre 5 vagues",
+		"icon": "🛡",
+		"condition": { "type": "last_stand_waves", "count": 5 },
+		"reward": { "type": "orbits", "amount": 10 }
+	},
+	"last_stand_10": {
+		"name": "Rempart",
+		"desc": "Survivre 10 vagues",
+		"icon": "🏰",
+		"condition": { "type": "last_stand_waves", "count": 10 },
+		"reward": { "type": "orbits", "amount": 25 }
+	},
+	"modules_200": {
+		"name": "Architecte",
+		"desc": "200 modules possédés",
+		"icon": "🏛",
+		"condition": { "type": "total_modules", "count": 200 },
+		"reward": { "type": "orbits", "amount": 20 }
+	},
+	"first_talent": {
+		"name": "Évolution",
+		"desc": "Acheter 1 talent prestige",
+		"icon": "🌟",
+		"condition": { "type": "talent_count", "count": 1 },
+		"reward": { "type": "orbits", "amount": 5 }
+	},
+	"prestige_6": {
+		"name": "Maître du Temps",
+		"desc": "6 prestiges",
+		"icon": "⏳",
+		"condition": { "type": "prestige_count", "count": 6 },
+		"reward": { "type": "orbits", "amount": 50 }
+	},
+	"energy_100m": {
+		"name": "Étoile Noire",
+		"desc": "Produire 100M énergie",
+		"icon": "🌑",
+		"condition": { "type": "total_energy", "amount": 100000000 },
+		"reward": { "type": "orbits", "amount": 100 }
+	},
+	"orbits_100": {
+		"name": "Centurion",
+		"desc": "Accumuler 100 orbits",
+		"icon": "⭐",
+		"condition": { "type": "total_orbits", "count": 100 },
+		"reward": { "type": "orbits", "amount": 25 }
+	},
+	"orbits_1000": {
+		"name": "Amiral",
+		"desc": "Accumuler 1 000 orbits",
+		"icon": "🎖",
+		"condition": { "type": "total_orbits", "count": 1000 },
+		"reward": { "type": "orbits", "amount": 100 }
+	},
+	"all_talents": {
+		"name": "Transcendance",
+		"desc": "Acheter tous les talents",
+		"icon": "✨",
+		"condition": { "type": "all_talents" },
+		"reward": { "type": "orbits", "amount": 200 }
+	},
+	"event_first": {
+		"name": "Premier Contact",
+		"desc": "Compléter 1 événement FTL",
+		"icon": "📡",
+		"condition": { "type": "event_count", "count": 1 },
+		"reward": { "type": "energy", "amount": 50 }
+	},
+	"event_10": {
+		"name": "Explorateur",
+		"desc": "Compléter 10 événements FTL",
+		"icon": "🚀",
+		"condition": { "type": "event_count", "count": 10 },
+		"reward": { "type": "orbits", "amount": 10 }
+	}
+}

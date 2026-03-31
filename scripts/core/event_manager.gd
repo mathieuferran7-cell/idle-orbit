@@ -100,6 +100,7 @@ func pick_event() -> Dictionary:
 func on_choice_made() -> void:
 	_paused = false
 	_timer = _cooldown_after + randf_range(0, _max_interval - _min_interval)
+	EventBus.event_choice_made.emit()
 
 func _get_scaling_factor() -> float:
 	# Scale rewards based on total energy produced: 1.0 at 0, grows with sqrt

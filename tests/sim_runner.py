@@ -234,9 +234,85 @@ RESEARCH_PRIORITY = [
     "tech_boost", "module_discount", "offline_boost",
 ]
 
+# ── Achievement tracking ────────────────────────────────────────────────────
+
+class AchievementTracker:
+    def __init__(self, data):
+        self.data = data
+        self.unlocked = {}
+        self.stats = {
+            "total_taps": 0,
+            "total_modules_bought": 0,
+            "total_research_bought": 0,
+            "total_events_completed": 0,
+            "last_stand_best_wave": 0,
+            "cumulative_energy": 0.0,
+        }
+        self.unlock_log = []
+
+    def on_tap(self):
+        self.stats["total_taps"] += 1
+
+    def on_module_bought(self):
+        self.stats["total_modules_bought"] += 1
+
+    def on_research_bought(self):
+        self.stats["total_research_bought"] += 1
+
+    def on_energy_produced(self, amount):
+        self.stats["cumulative_energy"] += amount
+
+    def on_last_stand(self, waves):
+        self.stats["last_stand_best_wave"] = max(self.stats["last_stand_best_wave"], waves)
+
+    def check_all(self, time, counts, modules, research, prestige):
+        for ach_id, ach in self.data.items():
+            if ach_id in self.unlocked:
+                continue
+            if self._check(ach_id, ach, counts, modules, research, prestige):
+                self.unlocked[ach_id] = True
+                reward = ach.get("reward", {})
+                rtype = reward.get("type", "")
+                amount = reward.get("amount", 0)
+                self.unlock_log.append((time, ach_id, ach.get("name", ""), f"{rtype}:{amount}"))
+
+    def _check(self, ach_id, ach, counts, modules, research, prestige):
+        cond = ach.get("condition", {})
+        ctype = cond.get("type", "")
+        if ctype == "module_count":
+            return counts.get(cond.get("module", ""), 0) >= cond.get("count", 1)
+        elif ctype == "total_modules":
+            return sum(counts.values()) >= cond.get("count", 1)
+        elif ctype == "total_taps":
+            return self.stats["total_taps"] >= cond.get("count", 1)
+        elif ctype == "total_energy":
+            return self.stats["cumulative_energy"] >= cond.get("amount", 0)
+        elif ctype == "prestige_count":
+            return prestige.prestige_count >= cond.get("count", 1)
+        elif ctype == "research_count":
+            return self.stats["total_research_bought"] >= cond.get("count", 1)
+        elif ctype == "research_all_maxed":
+            return research.all_maxed()
+        elif ctype == "module_unlocked":
+            return module_unlocked(modules, cond.get("module", ""), counts)
+        elif ctype == "total_orbits":
+            return prestige.total_orbits >= cond.get("count", 1)
+        elif ctype == "talent_count":
+            return sum(prestige.talents.values()) >= cond.get("count", 1)
+        elif ctype == "all_talents":
+            return all(
+                prestige.talents[tid] >= PRESTIGE_TALENTS[tid]["max"]
+                for tid in prestige.talents
+            )
+        elif ctype == "last_stand_waves":
+            return self.stats["last_stand_best_wave"] >= cond.get("count", 1)
+        elif ctype == "event_count":
+            return self.stats["total_events_completed"] >= cond.get("count", 1)
+        return False
+
 # ── Single run simulation ────────────────────────────────────────────────────
 
-def run_single(balance, modules, research_data, prestige, sim_duration=7200, tick=0.25, taps_per_second=4.0, energy_target=None):
+def run_single(balance, modules, research_data, prestige, sim_duration=7200, tick=0.25, taps_per_second=4.0, energy_target=None, ach_tracker=None):
     """Run a single prestige cycle. Stops when energy_target reached or sim_duration exceeded."""
 
     starting_energy = prestige.get_starting_energy(balance.get("starting_energy", 10.0))
@@ -284,6 +360,10 @@ def run_single(balance, modules, research_data, prestige, sim_duration=7200, tic
         taps_this_tick = int(taps_per_second * tick)
         tap_mult = research.get_tech_tap_multiplier() * module_tap_bonus * prestige_tech_mult
         tech += taps_this_tick * tech_per_tap * tap_mult
+        if ach_tracker:
+            for _ in range(taps_this_tick):
+                ach_tracker.on_tap()
+            ach_tracker.on_energy_produced(energy_tick)
 
         # Auto-tap
         auto_interval = research.get_auto_tap_interval()
@@ -299,6 +379,8 @@ def run_single(balance, modules, research_data, prestige, sim_duration=7200, tic
                 cost = research.upgrade(nid, research_discount)
                 tech -= cost
                 events.append((t, f"RESEARCH:{nid}:lv{research.get_level(nid)}"))
+                if ach_tracker:
+                    ach_tracker.on_research_bought()
                 break
 
         # Module buy (cheapest greedy)
@@ -313,11 +395,17 @@ def run_single(balance, modules, research_data, prestige, sim_duration=7200, tic
         if best_id:
             energy -= best_cost
             counts[best_id] += 1
+            if ach_tracker:
+                ach_tracker.on_module_bought()
 
         # Check all research done
         if all_research_done_at is None and research.all_maxed():
             all_research_done_at = t
             events.append((t, "ALL_RESEARCH_MAXED"))
+
+        # Achievement check (every 30s to avoid perf hit)
+        if ach_tracker and int(t * 4) % 120 == 0:
+            ach_tracker.check_all(t, counts, modules, research, prestige)
 
         # Stop if energy target reached
         if energy_target and total_energy_produced >= energy_target:
@@ -325,6 +413,10 @@ def run_single(balance, modules, research_data, prestige, sim_duration=7200, tic
             break
 
         t += tick
+
+    # Final achievement check
+    if ach_tracker:
+        ach_tracker.check_all(t, counts, modules, research, prestige)
 
     return total_energy_produced, all_research_done_at, events, e_rate, t
 
@@ -417,9 +509,67 @@ def run_single_mode():
 
 # ── Main ─────────────────────────────────────────────────────────────────────
 
+def run_achievements_sim(num_runs=8):
+    """Simulate multi-prestige with achievement tracking."""
+    balance = read_json("data/balance.json")
+    modules = read_json("data/modules.json")
+    research_data = read_json("data/research.json")
+    achievements_data = read_json("data/achievements.json")
+    prestige = Prestige()
+    tracker = AchievementTracker(achievements_data)
+
+    print("=" * 100)
+    print("IDLE ORBIT -- ACHIEVEMENT PROGRESSION SIMULATOR")
+    print(f"{num_runs} prestige runs, tracking all {len(achievements_data)} achievements")
+    print("=" * 100)
+
+    for run_idx in range(1, num_runs + 1):
+        prestige.auto_allocate()
+        threshold = prestige.get_prestige_threshold()
+
+        # Simulate a last stand result (waves = prestige_count * 2 + 3, capped at 10)
+        simulated_waves = min(prestige.prestige_count * 2 + 3, 10)
+        tracker.on_last_stand(simulated_waves)
+
+        total_e, res_done_at, events, final_e_rate, run_time = run_single(
+            balance, modules, research_data, prestige,
+            sim_duration=14400, tick=0.25, taps_per_second=4.0,
+            energy_target=threshold, ach_tracker=tracker
+        )
+
+        orbits_gained = prestige.calculate_orbits(total_e)
+        prestige.add_orbits(orbits_gained)
+        prestige.prestige_count += 1
+
+        # Check after prestige
+        tracker.check_all(run_time, {mid: 0 for mid in modules}, modules,
+                          Research(research_data), prestige)
+
+        print(f"\n  Run {run_idx}: {format_time(run_time)} | +{orbits_gained} orbits | Total: {prestige.total_orbits}")
+
+    print()
+    print("=" * 100)
+    print("ACHIEVEMENT UNLOCK TIMELINE")
+    print("=" * 100)
+    print(f"  {'TIME':>8}  {'ID':<25} {'NAME':<25} REWARD")
+    print("-" * 90)
+    for t, ach_id, name, reward in tracker.unlock_log:
+        print(f"  {format_time(t):>8}  {ach_id:<25} {name:<25} {reward}")
+
+    print(f"\n  Unlocked: {len(tracker.unlocked)} / {len(achievements_data)}")
+    not_unlocked = [aid for aid in achievements_data if aid not in tracker.unlocked]
+    if not_unlocked:
+        print(f"  Not unlocked: {', '.join(not_unlocked)}")
+
+    print(f"\n  Stats:")
+    for k, v in tracker.stats.items():
+        print(f"    {k}: {v:,.0f}" if isinstance(v, float) else f"    {k}: {v:,}")
+
 def main():
     if "--prestige" in sys.argv:
         run_prestige_sim(num_runs=6, run_duration=2400)
+    elif "--achievements" in sys.argv:
+        run_achievements_sim(num_runs=8)
     else:
         run_single_mode()
 

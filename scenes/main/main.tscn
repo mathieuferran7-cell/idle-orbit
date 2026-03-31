@@ -116,7 +116,7 @@ custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "MODULES"
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 
 [node name="TabResearchBtn" type="Button" parent="RootVBox/TabBar"]
 unique_name_in_owner = true
@@ -124,7 +124,7 @@ custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "RECHERCHE ✦"
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 
 [node name="TabPrestigeBtn" type="Button" parent="RootVBox/TabBar"]
 unique_name_in_owner = true
@@ -132,7 +132,15 @@ custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "PRESTIGE ⭐"
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
+
+[node name="TabQuestsBtn" type="Button" parent="RootVBox/TabBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "QUÊTES"
+theme_override_font_sizes/font_size = 26
 
 [node name="HSep2" type="HSeparator" parent="RootVBox"]
 layout_mode = 2
@@ -180,3 +188,11 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 visible = false
 script = ExtResource("4_prestige_ui")
+
+[node name="QuestsPanel" type="Control" parent="RootVBox/ContentArea"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false

@@ -28,5 +28,18 @@ signal event_triggered(event_data: Dictionary)
 signal buff_started(buff_id: String, duration: float)
 signal buff_ended(buff_id: String)
 
+# Achievements
+signal achievement_unlocked(ach_id: String, ach_data: Dictionary)
+
+# Quests
+signal quest_completed(quest_id: String)
+signal quest_progress(quest_id: String, current: int, target: int)
+
+# Last Stand result (waves survived for achievement/quest tracking)
+signal last_stand_completed(waves_survived: int)
+
+# Event completed (for achievement/quest tracking)
+signal event_choice_made()
+
 # Lifecycle
 signal game_ready()

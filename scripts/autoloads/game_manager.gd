@@ -5,6 +5,8 @@ var modules_data: Dictionary = {}
 var research: ResearchManager
 var prestige: PrestigeManager
 var events: EventManager
+var achievements: AchievementManager
+var quests: QuestManager
 
 var energy: float = 0.0
 var tech: float = 0.0
@@ -26,6 +28,8 @@ func _post_init() -> void:
 	var save_data := SaveManager.load_game()
 	if not save_data.is_empty():
 		_apply_save(save_data)
+	else:
+		achievements._initialized = true
 	EventBus.game_loaded.emit()
 	var offline_seconds := SaveManager.get_seconds_since_last_played()
 	var min_seconds: float = balance.get("offline_min_seconds", 60)
@@ -53,6 +57,12 @@ func _load_data_files() -> void:
 	events = EventManager.new()
 	events.setup(_read_json("res://data/events.json"), balance)
 	add_child(events)
+	achievements = AchievementManager.new()
+	achievements.setup(_read_json("res://data/achievements.json"))
+	add_child(achievements)
+	quests = QuestManager.new()
+	quests.setup(_read_json("res://data/quests.json"))
+	add_child(quests)
 
 func _read_json(path: String) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
@@ -300,6 +310,8 @@ func _apply_save(data: Dictionary) -> void:
 	research.load_state(data.get("research_levels", {}))
 	prestige.load_state(data.get("prestige", {}))
 	events.load_state(data.get("events", {}))
+	achievements.load_state(data.get("achievements", {}))
+	quests.load_state(data.get("quests", {}))
 
 func get_save_data() -> Dictionary:
 	return {
@@ -309,7 +321,12 @@ func get_save_data() -> Dictionary:
 		"research_levels": research.get_state(),
 		"prestige": prestige.get_state(),
 		"events": events.get_state(),
+		"achievements": achievements.get_state(),
+		"quests": quests.get_state(),
 	}
+
+func claim_quest(quest_id: String) -> bool:
+	return quests.claim_quest(quest_id)
 
 func save() -> void:
 	SaveManager.save_game(get_save_data())

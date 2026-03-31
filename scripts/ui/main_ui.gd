@@ -11,7 +11,9 @@ extends Control
 @onready var tab_modules_btn: Button = %TabModulesBtn
 @onready var tab_research_btn: Button = %TabResearchBtn
 @onready var tab_prestige_btn: Button = %TabPrestigeBtn
+@onready var tab_quests_btn: Button = %TabQuestsBtn
 @onready var prestige_panel: Control = %PrestigePanel
+@onready var quests_panel: Control = %QuestsPanel
 @onready var mining_manager: MiningManager = $MiningManager
 
 var _module_buttons: Dictionary = {}
@@ -21,6 +23,8 @@ var _event_popup: Control = null
 var _buff_label: Label = null
 var _buy_mode_btn: Button = null
 var _tap_particles: CPUParticles2D = null
+var _quests_container: VBoxContainer = null
+var _quest_badge: Label = null
 const BUY_MODES := [1, 10, 25, 0]
 var _buy_mode_index: int = 0
 
@@ -34,10 +38,14 @@ func _ready() -> void:
 	EventBus.event_triggered.connect(_on_event_triggered)
 	EventBus.buff_started.connect(_on_buff_changed)
 	EventBus.buff_ended.connect(_on_buff_ended)
+	EventBus.achievement_unlocked.connect(_on_achievement_unlocked)
+	EventBus.quest_completed.connect(_on_quest_completed)
+	EventBus.quest_progress.connect(_on_quest_progress)
 	asteroid_btn.pressed.connect(_on_asteroid_tapped)
 	tab_modules_btn.pressed.connect(_show_modules_tab)
 	tab_research_btn.pressed.connect(_show_research_tab)
 	tab_prestige_btn.pressed.connect(_show_prestige_tab)
+	tab_quests_btn.pressed.connect(_show_quests_tab)
 	# If returning from minigame, emit game_ready ourselves (autoload _post_init won't re-fire)
 	if GameManager._post_prestige_pending >= 0:
 		var orbits := GameManager._post_prestige_pending
@@ -53,8 +61,14 @@ func _on_game_ready() -> void:
 	_build_buy_mode_toggle()
 	_build_buff_label()
 	_build_module_list()
+	_build_quest_badge()
 	_refresh_all()
+	_update_quest_badge()
 	AdManager.show_banner()
+	# Retroactive check: mark already-met achievements without granting rewards
+	GameManager.achievements._suppress_rewards = true
+	GameManager.achievements.check_all()
+	GameManager.achievements._suppress_rewards = false
 	if GameManager._return_to_prestige_tab:
 		GameManager._return_to_prestige_tab = false
 		_show_prestige_tab()
@@ -62,31 +76,25 @@ func _on_game_ready() -> void:
 		_show_modules_tab()
 
 func _show_modules_tab() -> void:
-	modules_panel.visible = true
-	research_panel.visible = false
-	prestige_panel.visible = false
-	tab_modules_btn.disabled = true
-	tab_research_btn.disabled = false
-	tab_prestige_btn.disabled = false
-	_fade_in_panel(modules_panel)
+	_set_tab(modules_panel)
 
 func _show_research_tab() -> void:
-	modules_panel.visible = false
-	research_panel.visible = true
-	prestige_panel.visible = false
-	tab_modules_btn.disabled = false
-	tab_research_btn.disabled = true
-	tab_prestige_btn.disabled = false
-	_fade_in_panel(research_panel)
+	_set_tab(research_panel)
 
 func _show_prestige_tab() -> void:
-	modules_panel.visible = false
-	research_panel.visible = false
-	prestige_panel.visible = true
-	tab_modules_btn.disabled = false
-	tab_research_btn.disabled = false
-	tab_prestige_btn.disabled = true
-	_fade_in_panel(prestige_panel)
+	_set_tab(prestige_panel)
+
+func _show_quests_tab() -> void:
+	_set_tab(quests_panel)
+	_build_quests_list()
+
+func _set_tab(active: Control) -> void:
+	var panels := [modules_panel, research_panel, prestige_panel, quests_panel]
+	var buttons := [tab_modules_btn, tab_research_btn, tab_prestige_btn, tab_quests_btn]
+	for i in panels.size():
+		panels[i].visible = (panels[i] == active)
+		buttons[i].disabled = (panels[i] == active)
+	_fade_in_panel(active)
 
 func _fade_in_panel(panel: Control) -> void:
 	panel.modulate = Color(1, 1, 1, 0)
@@ -143,6 +151,20 @@ func _build_buff_label() -> void:
 	_buff_label.add_theme_font_size_override("font_size", 24)
 	_buff_label.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
 	header_vbox.add_child(_buff_label)
+
+func _build_quest_badge() -> void:
+	if _quest_badge and is_instance_valid(_quest_badge):
+		return
+	_quest_badge = Label.new()
+	_quest_badge.name = "QuestBadge"
+	_quest_badge.add_theme_font_size_override("font_size", 22)
+	_quest_badge.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+	_quest_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_quest_badge.visible = false
+	tab_quests_btn.add_child(_quest_badge)
+	_quest_badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_quest_badge.set_offset(SIDE_RIGHT, -8)
+	_quest_badge.set_offset(SIDE_TOP, 4)
 
 func _build_buy_mode_toggle() -> void:
 	if _buy_mode_btn and is_instance_valid(_buy_mode_btn):
@@ -590,3 +612,171 @@ func _show_reward_toast(text: String) -> void:
 	tw.tween_interval(1.5)
 	tw.tween_property(toast, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(toast.queue_free)
+
+# ── Achievement toast ────────────────────────────────────────────────────────
+
+func _on_achievement_unlocked(_ach_id: String, ach_data: Dictionary) -> void:
+	var icon: String = ach_data.get("icon", "🏆")
+	var ach_name: String = ach_data.get("name", "")
+	_show_reward_toast("%s %s" % [icon, ach_name])
+
+# ── Quests UI ────────────────────────────────────────────────────────────────
+
+func _on_quest_completed(_quest_id: String) -> void:
+	_update_quest_badge()
+	if quests_panel.visible:
+		_build_quests_list()
+
+func _on_quest_progress(_quest_id: String, _current: int, _target: int) -> void:
+	if quests_panel.visible:
+		_build_quests_list()
+
+func _update_quest_badge() -> void:
+	var count := GameManager.quests.get_claimable_count()
+	if _quest_badge:
+		_quest_badge.text = str(count) if count > 0 else ""
+		_quest_badge.visible = count > 0
+
+func _build_quests_list() -> void:
+	if not _quests_container:
+		# Create scroll + container inside quests_panel
+		var scroll := ScrollContainer.new()
+		scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		scroll.add_theme_constant_override("margin_left", 24)
+		quests_panel.add_child(scroll)
+		_quests_container = VBoxContainer.new()
+		_quests_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_quests_container.add_theme_constant_override("separation", 12)
+		scroll.add_child(_quests_container)
+		# Ensure scroll works on mobile
+		scroll.mouse_filter = Control.MOUSE_FILTER_PASS
+		_quests_container.mouse_filter = Control.MOUSE_FILTER_PASS
+
+	# Clear existing
+	for child in _quests_container.get_children():
+		child.queue_free()
+
+	# Header: Daily
+	var daily_header := Label.new()
+	daily_header.text = "QUOTIDIENNES"
+	daily_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	daily_header.add_theme_font_size_override("font_size", 34)
+	daily_header.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+	_quests_container.add_child(daily_header)
+
+	for quest in GameManager.quests.get_active_daily():
+		_quests_container.add_child(_create_quest_row(quest, "daily"))
+
+	# Separator
+	_quests_container.add_child(HSeparator.new())
+
+	# Header: Weekly
+	var weekly_header := Label.new()
+	weekly_header.text = "HEBDOMADAIRES"
+	weekly_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	weekly_header.add_theme_font_size_override("font_size", 34)
+	weekly_header.add_theme_color_override("font_color", Color(0.6, 0.85, 1.0))
+	_quests_container.add_child(weekly_header)
+
+	for quest in GameManager.quests.get_weekly():
+		_quests_container.add_child(_create_quest_row(quest, "weekly"))
+
+	# Achievements summary
+	_quests_container.add_child(HSeparator.new())
+	var ach_header := Label.new()
+	var unlocked := GameManager.achievements.get_unlocked_count()
+	var total := GameManager.achievements.data.size()
+	ach_header.text = "ACHIEVEMENTS : %d / %d" % [unlocked, total]
+	ach_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ach_header.add_theme_font_size_override("font_size", 30)
+	ach_header.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	_quests_container.add_child(ach_header)
+
+func _create_quest_row(quest: Dictionary, _category: String) -> PanelContainer:
+	var qid: String = quest.get("id", "")
+	var obj: Dictionary = quest.get("objective", {})
+	var target: int = int(obj.get("count", 1))
+	var progress: int = GameManager.quests.get_progress(qid)
+	var claimed: bool = GameManager.quests.is_claimed(qid)
+	var completable: bool = GameManager.quests.is_completable(qid)
+
+	var panel := PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 16)
+	margin.add_theme_constant_override("margin_right", 16)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	margin.mouse_filter = Control.MOUSE_FILTER_PASS
+	panel.add_child(margin)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 16)
+	hbox.mouse_filter = Control.MOUSE_FILTER_PASS
+	margin.add_child(hbox)
+
+	# Text column
+	var text_vbox := VBoxContainer.new()
+	text_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_vbox.mouse_filter = Control.MOUSE_FILTER_PASS
+	hbox.add_child(text_vbox)
+
+	var title_lbl := Label.new()
+	title_lbl.text = quest.get("text", "")
+	title_lbl.add_theme_font_size_override("font_size", 28)
+	if claimed:
+		title_lbl.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+	text_vbox.add_child(title_lbl)
+
+	var desc_lbl := Label.new()
+	desc_lbl.text = quest.get("desc", "")
+	desc_lbl.add_theme_font_size_override("font_size", 22)
+	desc_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	text_vbox.add_child(desc_lbl)
+
+	# Progress
+	var prog_lbl := Label.new()
+	var display_progress := mini(progress, target)
+	prog_lbl.text = "%d / %d" % [display_progress, target]
+	prog_lbl.add_theme_font_size_override("font_size", 24)
+	if claimed:
+		prog_lbl.text = "OK"
+		prog_lbl.add_theme_color_override("font_color", Color(0.4, 0.7, 0.4))
+	elif completable:
+		prog_lbl.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
+	else:
+		prog_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	text_vbox.add_child(prog_lbl)
+
+	# Reward + Claim button
+	var reward: Dictionary = quest.get("reward", {})
+	var reward_type: String = reward.get("type", "")
+	var reward_amount: int = int(reward.get("amount", 0))
+	var reward_icon := "⚡" if reward_type == "energy" else ("🔧" if reward_type == "tech" else "⭐")
+
+	if completable:
+		var claim_btn := Button.new()
+		claim_btn.text = "%s %d" % [reward_icon, reward_amount]
+		claim_btn.custom_minimum_size = Vector2(160, 70)
+		claim_btn.add_theme_font_size_override("font_size", 26)
+		claim_btn.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+		claim_btn.pressed.connect(_on_claim_quest.bind(qid))
+		hbox.add_child(claim_btn)
+	elif not claimed:
+		var reward_lbl := Label.new()
+		reward_lbl.text = "%s %d" % [reward_icon, reward_amount]
+		reward_lbl.add_theme_font_size_override("font_size", 24)
+		reward_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		hbox.add_child(reward_lbl)
+
+	if claimed:
+		panel.modulate = Color(0.6, 0.6, 0.6)
+
+	return panel
+
+func _on_claim_quest(quest_id: String) -> void:
+	if GameManager.claim_quest(quest_id):
+		AudioManager.play_sfx("buy")
+		_build_quests_list()
+		_update_quest_badge()

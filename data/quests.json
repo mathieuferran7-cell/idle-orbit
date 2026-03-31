@@ -1,0 +1,126 @@
+{
+	"daily_pool": [
+		{
+			"id": "daily_tap_50",
+			"text": "Frappe d'astéroïde",
+			"desc": "50 taps mining",
+			"objective": { "type": "taps", "count": 50 },
+			"reward": { "type": "tech", "amount": 20 }
+		},
+		{
+			"id": "daily_tap_200",
+			"text": "Marteau-piqueur",
+			"desc": "200 taps mining",
+			"objective": { "type": "taps", "count": 200 },
+			"reward": { "type": "tech", "amount": 50 }
+		},
+		{
+			"id": "daily_energy_5k",
+			"text": "Collecteur du jour",
+			"desc": "Produire 5 000 énergie",
+			"objective": { "type": "energy_produced", "count": 5000 },
+			"reward": { "type": "tech", "amount": 30 }
+		},
+		{
+			"id": "daily_energy_50k",
+			"text": "Centrale active",
+			"desc": "Produire 50 000 énergie",
+			"objective": { "type": "energy_produced", "count": 50000 },
+			"reward": { "type": "tech", "amount": 100 }
+		},
+		{
+			"id": "daily_tech_500",
+			"text": "Données techniques",
+			"desc": "Collecter 500 tech",
+			"objective": { "type": "tech_collected", "count": 500 },
+			"reward": { "type": "energy", "amount": 500 }
+		},
+		{
+			"id": "daily_buy_3",
+			"text": "Shopping spatial",
+			"desc": "Acheter 3 modules",
+			"objective": { "type": "modules_bought", "count": 3 },
+			"reward": { "type": "energy", "amount": 200 }
+		},
+		{
+			"id": "daily_buy_10",
+			"text": "Expansion rapide",
+			"desc": "Acheter 10 modules",
+			"objective": { "type": "modules_bought", "count": 10 },
+			"reward": { "type": "energy", "amount": 1000 }
+		},
+		{
+			"id": "daily_research_1",
+			"text": "Eurêka",
+			"desc": "Acheter 1 upgrade recherche",
+			"objective": { "type": "research_bought", "count": 1 },
+			"reward": { "type": "tech", "amount": 100 }
+		},
+		{
+			"id": "daily_event_1",
+			"text": "Signal reçu",
+			"desc": "Compléter 1 événement FTL",
+			"objective": { "type": "events_completed", "count": 1 },
+			"reward": { "type": "energy", "amount": 500 }
+		},
+		{
+			"id": "daily_event_2",
+			"text": "Fréquences actives",
+			"desc": "Compléter 2 événements FTL",
+			"objective": { "type": "events_completed", "count": 2 },
+			"reward": { "type": "tech", "amount": 50 }
+		},
+		{
+			"id": "daily_prestige",
+			"text": "Le Grand Reset",
+			"desc": "Compléter 1 prestige",
+			"objective": { "type": "prestiges", "count": 1 },
+			"reward": { "type": "orbits", "amount": 15 }
+		},
+		{
+			"id": "daily_laststand_3",
+			"text": "Gardien du jour",
+			"desc": "Survivre 3+ vagues dans Last Stand",
+			"objective": { "type": "last_stand_waves", "count": 3 },
+			"reward": { "type": "orbits", "amount": 10 }
+		}
+	],
+	"weekly": [
+		{
+			"id": "weekly_tap_1000",
+			"text": "Marathonien",
+			"desc": "1 000 taps dans la semaine",
+			"objective": { "type": "taps", "count": 1000 },
+			"reward": { "type": "orbits", "amount": 10 }
+		},
+		{
+			"id": "weekly_energy_1m",
+			"text": "Dynamo",
+			"desc": "Produire 1M énergie dans la semaine",
+			"objective": { "type": "energy_produced", "count": 1000000 },
+			"reward": { "type": "orbits", "amount": 20 }
+		},
+		{
+			"id": "weekly_prestige_2",
+			"text": "Double prestige",
+			"desc": "2 prestiges dans la semaine",
+			"objective": { "type": "prestiges", "count": 2 },
+			"reward": { "type": "orbits", "amount": 30 }
+		},
+		{
+			"id": "weekly_modules_30",
+			"text": "Bâtisseur",
+			"desc": "Acheter 30 modules dans la semaine",
+			"objective": { "type": "modules_bought", "count": 30 },
+			"reward": { "type": "orbits", "amount": 15 }
+		},
+		{
+			"id": "weekly_events_5",
+			"text": "Diplomate stellaire",
+			"desc": "5 événements FTL dans la semaine",
+			"objective": { "type": "events_completed", "count": 5 },
+			"reward": { "type": "orbits", "amount": 20 }
+		}
+	],
+	"daily_count": 3
+}
