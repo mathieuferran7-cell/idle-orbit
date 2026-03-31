@@ -1,0 +1,15 @@
+{
+	"no_ads": {
+		"id": "com.idleorbit.no_ads",
+		"price": "2.99",
+		"type": "non_consumable",
+		"desc": "Supprimer les publicités"
+	},
+	"starter_pack": {
+		"id": "com.idleorbit.starter",
+		"price": "1.99",
+		"type": "non_consumable",
+		"desc": "50 Orbits + boost offline 24h",
+		"rewards": { "orbits": 50, "offline_boost_hours": 24 }
+	}
+}

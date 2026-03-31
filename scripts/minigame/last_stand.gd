@@ -46,7 +46,7 @@ func _ready() -> void:
 	var station_data: Dictionary = _data.get("station", {})
 	var base_hp: int = int(station_data.get("base_hp", 10))
 	var hp_per: int = int(station_data.get("hp_per_energy_module", 2))
-	_station_max_hp = base_hp + _params.get("total_energy_modules", 0) * hp_per
+	_station_max_hp = int((base_hp + _params.get("total_energy_modules", 0) * hp_per) * GameManager.prestige.run_modifiers.get("hp_bonus", 1.0))
 	_station_hp = _station_max_hp
 
 	# Starfield background
@@ -201,9 +201,12 @@ func _get_wave_def(index: int) -> Dictionary:
 	var growth: int = int(_data.get("overflow_wave_count_growth", 3))
 	var decay: float = float(_data.get("overflow_wave_interval_decay", 0.05))
 	var min_interval: float = float(_data.get("overflow_wave_min_interval", 0.25))
+	var types: Array = base.get("types", ["small_asteroid"]).duplicate()
+	if (index + 1) % 5 == 0 and not types.has("boss_asteroid"):
+		types.append("boss_asteroid")
 	return {
 		"count": int(base.get("count", 18)) + overflow * growth,
-		"types": base.get("types", ["small_asteroid"]),
+		"types": types,
 		"spawn_interval": maxf(float(base.get("spawn_interval", 0.4)) - overflow * decay, min_interval),
 	}
 
@@ -220,6 +223,7 @@ func _spawn_enemy() -> void:
 	enemy.setup(type_data, spawn_pos, CENTER)
 	enemy.reached_station.connect(_on_station_hit)
 	enemy.died.connect(_on_enemy_died.bind(enemy))
+	enemy.split_requested.connect(_on_enemy_split)
 	_enemies_node.add_child(enemy)
 	_enemies_spawned += 1
 
@@ -250,6 +254,20 @@ func _on_station_hit(damage: int) -> void:
 func _on_enemy_died(enemy: MinigameEnemy) -> void:
 	if is_instance_valid(enemy):
 		_spawn_death_particles(enemy.position, enemy.color)
+
+func _on_enemy_split(pos: Vector2, type_id: String, count: int) -> void:
+	var enemies_data: Dictionary = _data.get("enemies", {})
+	var type_data: Dictionary = enemies_data.get(type_id, {})
+	if type_data.is_empty():
+		return
+	for i in count:
+		var offset := Vector2(randf_range(-30.0, 30.0), randf_range(-30.0, 30.0))
+		var split_enemy := MinigameEnemy.new()
+		split_enemy.setup(type_data, pos + offset, CENTER)
+		split_enemy.reached_station.connect(_on_station_hit)
+		split_enemy.died.connect(_on_enemy_died.bind(split_enemy))
+		split_enemy.split_requested.connect(_on_enemy_split)
+		_enemies_node.add_child(split_enemy)
 
 func _game_over() -> void:
 	_state = State.GAME_OVER

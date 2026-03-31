@@ -21,6 +21,7 @@ var _asteroid_tween: Tween
 var _offline_popup: Control = null
 var _event_popup: Control = null
 var _buff_label: Label = null
+var _weave_label: Label = null
 var _buy_mode_btn: Button = null
 var _tap_particles: CPUParticles2D = null
 var _quests_container: VBoxContainer = null
@@ -29,6 +30,7 @@ const BUY_MODES := [1, 10, 25, 0]
 var _buy_mode_index: int = 0
 var _tutorial_timer: float = 0.0
 var _tutorial_tooltip: Control = null
+var _no_ads_btn: Button = null
 
 func _ready() -> void:
 	EventBus.game_ready.connect(_on_game_ready)
@@ -61,6 +63,7 @@ func _on_game_ready() -> void:
 	mining_manager.setup(GameManager.balance)
 	_build_buy_mode_toggle()
 	_build_buff_label()
+	_build_weave_label()
 	_build_module_list()
 	_build_quest_badge()
 	_refresh_all()
@@ -183,6 +186,35 @@ func _build_buff_label() -> void:
 	_buff_label.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
 	header_vbox.add_child(_buff_label)
 
+func _build_weave_label() -> void:
+	if _weave_label and is_instance_valid(_weave_label):
+		return
+	var header_vbox: VBoxContainer = asteroid_btn.get_parent()
+	_weave_label = Label.new()
+	_weave_label.name = "WeaveLabel"
+	_weave_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_weave_label.add_theme_font_size_override("font_size", 22)
+	_weave_label.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0))
+	header_vbox.add_child(_weave_label)
+	_update_weave_label()
+
+func _update_weave_label() -> void:
+	if not _weave_label or not is_instance_valid(_weave_label):
+		return
+	var mods: Dictionary = GameManager.prestige.run_modifiers
+	if mods.is_empty():
+		_weave_label.visible = false
+		return
+	var parts: Array[String] = []
+	if mods.has("tap_bonus"):
+		parts.append("⛏ x2")
+	if mods.has("hp_bonus"):
+		parts.append("🛡 +25%")
+	if mods.has("event_speed"):
+		parts.append("📡 x2")
+	_weave_label.text = "  ".join(parts)
+	_weave_label.visible = not parts.is_empty()
+
 func _build_quest_badge() -> void:
 	if _quest_badge and is_instance_valid(_quest_badge):
 		return
@@ -229,6 +261,28 @@ func _build_module_list() -> void:
 		var row := _create_module_row(module_id)
 		modules_container.add_child(row)
 		_module_buttons[module_id] = row
+
+	_build_no_ads_button()
+
+func _build_no_ads_button() -> void:
+	if GameManager.iap.is_purchased("no_ads"):
+		return
+	_no_ads_btn = Button.new()
+	_no_ads_btn.text = "Supprimer les pubs — 2.99€"
+	_no_ads_btn.custom_minimum_size = Vector2(0, 80)
+	_no_ads_btn.add_theme_font_size_override("font_size", 30)
+	_no_ads_btn.pressed.connect(_on_no_ads_pressed)
+	modules_container.add_child(_no_ads_btn)
+	if not GameManager.iap.purchase_completed.is_connected(_on_iap_completed):
+		GameManager.iap.purchase_completed.connect(_on_iap_completed)
+
+func _on_no_ads_pressed() -> void:
+	GameManager.iap.purchase("no_ads")
+
+func _on_iap_completed(_product_id: String) -> void:
+	if _no_ads_btn and GameManager.iap.is_purchased("no_ads"):
+		_no_ads_btn.queue_free()
+		_no_ads_btn = null
 
 func _create_module_row(module_id: String) -> PanelContainer:
 	var mod: Dictionary = GameManager.modules_data[module_id]
@@ -610,10 +664,24 @@ func _build_event_popup(event_data: Dictionary) -> void:
 			btn.text = "%s\n%s" % [label_text, desc_text]
 		btn.custom_minimum_size = Vector2(0, 90)
 		btn.add_theme_font_size_override("font_size", 26)
-		btn.pressed.connect(_on_event_choice.bind(choice.get("reward", {}), is_premium))
+		btn.pressed.connect(_on_event_choice.bind(choice.get("reward", {}), is_premium, choice.get("bid_cost", {})))
 		vbox.add_child(btn)
 
-func _on_event_choice(reward: Dictionary, is_premium: bool = false) -> void:
+func _on_event_choice(reward: Dictionary, is_premium: bool = false, bid_cost: Dictionary = {}) -> void:
+	# Check bid cost (auction events)
+	if not bid_cost.is_empty():
+		var cost_type: String = bid_cost.get("type", "tech")
+		var cost_amount: float = float(bid_cost.get("amount", 0))
+		var current: float = 0.0
+		if cost_type == "tech":
+			current = GameManager.tech
+		elif cost_type == "energy":
+			current = GameManager.energy
+		if current < cost_amount:
+			_show_bid_error_toast("Pas assez de %s" % ("🔧 Tech" if cost_type == "tech" else "⚡ Énergie"))
+			return
+		# Deduct bid cost
+		GameManager.add_resource(cost_type, -cost_amount)
 	if is_premium:
 		AdManager.show_rewarded(func():
 			_apply_event_reward(reward)
@@ -639,6 +707,23 @@ func _show_reward_toast(text: String) -> void:
 	toast.set_offset(SIDE_RIGHT, 400)
 	toast.add_theme_font_size_override("font_size", 40)
 	toast.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+	toast.modulate.a = 1.0
+	add_child(toast)
+	var tw := create_tween()
+	tw.tween_interval(1.5)
+	tw.tween_property(toast, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(toast.queue_free)
+
+func _show_bid_error_toast(text: String) -> void:
+	var toast := Label.new()
+	toast.text = text
+	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	toast.set_offset(SIDE_TOP, 160)
+	toast.set_offset(SIDE_LEFT, -400)
+	toast.set_offset(SIDE_RIGHT, 400)
+	toast.add_theme_font_size_override("font_size", 36)
+	toast.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
 	toast.modulate.a = 1.0
 	add_child(toast)
 	var tw := create_tween()

@@ -36,7 +36,7 @@ func tap() -> float:
 	if not can_tap():
 		return 0.0
 	_cooldown_remaining = _tap_cooldown
-	var gained := _tech_per_tap * GameManager.research.get_tech_tap_multiplier() * _get_module_tap_bonus() * GameManager.prestige.get_tech_tap_mult() * GameManager.events.get_buff_multiplier("tap")
+	var gained := _tech_per_tap * GameManager.research.get_tech_tap_multiplier() * _get_module_tap_bonus() * GameManager.prestige.get_tech_tap_mult() * GameManager.events.get_buff_multiplier("tap") * GameManager.prestige.run_modifiers.get("tap_bonus", 1.0)
 	GameManager.add_resource("tech", gained)
 	EventBus.mining_tapped.emit(gained)
 	AudioManager.play_sfx("tick")

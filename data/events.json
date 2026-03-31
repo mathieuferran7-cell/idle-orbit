@@ -174,5 +174,86 @@
 				]}
 			}
 		]
+	},
+	"drift_cargo_tech": {
+		"title": "Cargo en dérive",
+		"text": "Un vaisseau abandonné dérive près de votre station. Son manifeste indique du matériel technique rare.",
+		"icon": "🚢",
+		"auction": true,
+		"choices": [
+			{
+				"label": "Enchère basse",
+				"desc": "Offrir peu de Tech (-200 🔧)",
+				"reward": { "type": "energy", "min": 500, "max": 2000 },
+				"bid_cost": { "type": "tech", "amount": 200 }
+			},
+			{
+				"label": "Enchère moyenne",
+				"desc": "Offrir un prix correct (-800 🔧)",
+				"reward": { "type": "module", "module_id": "mining_probe", "count": 1 },
+				"bid_cost": { "type": "tech", "amount": 800 }
+			},
+			{
+				"label": "Enchère haute",
+				"desc": "Surenchérir (-2000 🔧)",
+				"premium": true,
+				"reward": { "type": "orbits", "amount": 5 },
+				"bid_cost": { "type": "tech", "amount": 2000 }
+			}
+		]
+	},
+	"drift_cargo_modules": {
+		"title": "Épave modulaire",
+		"text": "Les restes d'une station démantelée contiennent des modules récupérables.",
+		"icon": "🛸",
+		"auction": true,
+		"choices": [
+			{
+				"label": "Récupération rapide",
+				"desc": "Prendre ce qui est facile (-300 🔧)",
+				"reward": { "type": "energy", "min": 1000, "max": 5000 },
+				"bid_cost": { "type": "tech", "amount": 300 }
+			},
+			{
+				"label": "Extraction complète",
+				"desc": "Investir pour tout récupérer (-1500 🔧)",
+				"reward": { "type": "module", "module_id": "orbital_reactor", "count": 1 },
+				"bid_cost": { "type": "tech", "amount": 1500 }
+			},
+			{
+				"label": "Démontage expert",
+				"desc": "Analyse approfondie (-3000 🔧)",
+				"premium": true,
+				"reward": { "type": "multi", "rewards": [{"type": "orbits", "amount": 3}, {"type": "tech", "amount": 1000}] },
+				"bid_cost": { "type": "tech", "amount": 3000 }
+			}
+		]
+	},
+	"drift_cargo_rare": {
+		"title": "Signal crypté",
+		"text": "Un signal codé émane d'un conteneur blindé. Son contenu pourrait être exceptionnel.",
+		"icon": "📦",
+		"auction": true,
+		"choices": [
+			{
+				"label": "Décodage basique",
+				"desc": "Tenter une analyse simple (-500 🔧)",
+				"reward": { "type": "tech", "min": 300, "max": 1500 },
+				"bid_cost": { "type": "tech", "amount": 500 }
+			},
+			{
+				"label": "Décodage avancé",
+				"desc": "Mobiliser plus de ressources (-2000 🔧)",
+				"reward": { "type": "energy", "min": 5000, "max": 20000 },
+				"bid_cost": { "type": "tech", "amount": 2000 }
+			},
+			{
+				"label": "Décodage total",
+				"desc": "Tout miser (-5000 🔧)",
+				"premium": true,
+				"reward": { "type": "orbits", "amount": 8 },
+				"bid_cost": { "type": "tech", "amount": 5000 }
+			}
+		]
 	}
 }

@@ -12,6 +12,10 @@ var _paused: bool = false
 
 var _milestones_triggered: Dictionary = {}
 
+# Auction timer (separate from main event timer)
+var _auction_timer: float = 5400.0  # 90 min default
+var _auction_interval: float = 5400.0
+
 func setup(events_data: Dictionary, balance: Dictionary) -> void:
 	data = events_data
 	_min_interval = float(balance.get("event_min_interval", 120))
@@ -79,15 +83,28 @@ func _process(delta: float) -> void:
 		if not evt.is_empty():
 			_paused = true
 			EventBus.event_triggered.emit(evt)
+	# Tick auction timer (independent from main event timer)
+	_auction_timer -= delta
+	if _auction_timer <= 0.0:
+		var auction_evt := _pick_auction_event()
+		if not auction_evt.is_empty():
+			_paused = true
+			EventBus.event_triggered.emit(auction_evt)
+		_auction_timer = _auction_interval
 
 func pick_event() -> Dictionary:
 	var pool: Array[String] = []
 	for eid in data:
+		# Exclude auction events from the regular pool
+		if data[eid].get("auction", false):
+			continue
 		if eid not in _history:
 			pool.append(eid)
 	if pool.is_empty():
 		_history.clear()
 		for eid in data:
+			if data[eid].get("auction", false):
+				continue
 			pool.append(eid)
 	var eid: String = pool[randi() % pool.size()]
 	_history.append(eid)
@@ -97,12 +114,26 @@ func pick_event() -> Dictionary:
 	evt["id"] = eid
 	return evt
 
+func _pick_auction_event() -> Dictionary:
+	var pool: Array[String] = []
+	for eid in data:
+		if data[eid].get("auction", false):
+			pool.append(eid)
+	if pool.is_empty():
+		return {}
+	var eid: String = pool[randi() % pool.size()]
+	var evt: Dictionary = data[eid].duplicate(true)
+	evt["id"] = eid
+	return evt
+
 func set_paused(value: bool) -> void:
 	_paused = value
 
 func on_choice_made() -> void:
 	_paused = false
-	_timer = _cooldown_after + randf_range(0, _max_interval - _min_interval)
+	var speed_mod: float = GameManager.prestige.run_modifiers.get("event_speed", 1.0)
+	_timer = (_cooldown_after + randf_range(0, _max_interval - _min_interval)) * speed_mod
+	GameManager.prestige.record_event()
 	EventBus.event_choice_made.emit()
 
 func _get_scaling_factor() -> float:
@@ -207,6 +238,7 @@ func reset() -> void:
 	_milestones_triggered.clear()
 	_paused = false
 	_reset_timer()
+	_auction_timer = _auction_interval
 
 func get_state() -> Dictionary:
 	var buffs_data: Array = []
@@ -214,6 +246,7 @@ func get_state() -> Dictionary:
 		buffs_data.append({"id": buff.id, "remaining": buff.remaining})
 	return {
 		"timer": _timer,
+		"auction_timer": _auction_timer,
 		"history": _history.duplicate(),
 		"milestones": _milestones_triggered.duplicate(),
 		"buffs": buffs_data,
@@ -223,6 +256,7 @@ func get_state() -> Dictionary:
 func load_state(state: Dictionary) -> void:
 	# Force minimum timer on load to prevent events firing immediately after offline return
 	_timer = maxf(float(state.get("timer", _min_interval)), _min_interval)
+	_auction_timer = maxf(float(state.get("auction_timer", _auction_interval)), _min_interval)
 	_history = []
 	for h in state.get("history", []):
 		_history.append(str(h))
@@ -235,4 +269,7 @@ func load_state(state: Dictionary) -> void:
 		_active_buffs.append({"id": str(b.get("id", "")), "remaining": float(b.get("remaining", 0))})
 
 func _reset_timer() -> void:
-	_timer = randf_range(_min_interval, _max_interval)
+	var speed_mod := 1.0
+	if GameManager.prestige:
+		speed_mod = GameManager.prestige.run_modifiers.get("event_speed", 1.0)
+	_timer = randf_range(_min_interval, _max_interval) * speed_mod

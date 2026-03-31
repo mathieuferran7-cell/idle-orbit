@@ -3,12 +3,16 @@ extends Area2D
 
 signal reached_station(damage: int)
 signal died()
+signal split_requested(pos: Vector2, split_type: String, count: int)
 
 var hp: int = 1
 var speed: float = 150.0
 var damage_to_station: int = 1
 var enemy_radius: float = 20.0
 var color: Color = Color(0.6, 0.6, 0.5)
+var split_on_death: bool = false
+var split_type: String = ""
+var split_count: int = 0
 var _target: Vector2
 var _flash_timer: float = 0.0
 
@@ -21,6 +25,9 @@ func setup(type_data: Dictionary, spawn_pos: Vector2, target: Vector2) -> void:
 	enemy_radius = float(type_data.get("radius", 20))
 	var c: Array = type_data.get("color", [0.6, 0.6, 0.5])
 	color = Color(c[0], c[1], c[2])
+	split_on_death = bool(type_data.get("split_on_death", false))
+	split_type = str(type_data.get("split_type", ""))
+	split_count = int(type_data.get("split_count", 0))
 
 	var shape := CircleShape2D.new()
 	shape.radius = enemy_radius
@@ -49,6 +56,8 @@ func take_damage(amount: int) -> void:
 	modulate = Color(3.0, 3.0, 3.0)
 	if hp <= 0:
 		AudioManager.play_sfx("enemy_die")
+		if split_on_death and split_count > 0:
+			split_requested.emit(position, split_type, split_count)
 		died.emit()
 		queue_free()
 	else:

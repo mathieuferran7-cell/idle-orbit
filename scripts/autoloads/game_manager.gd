@@ -7,6 +7,7 @@ var prestige: PrestigeManager
 var events: EventManager
 var achievements: AchievementManager
 var quests: QuestManager
+var iap: IAPManager
 
 var energy: float = 0.0
 var tech: float = 0.0
@@ -32,6 +33,7 @@ func _post_init() -> void:
 		_apply_save(save_data)
 	else:
 		achievements.set_initialized(true)
+	prestige.start_run()
 	EventBus.game_loaded.emit()
 	var offline_seconds := SaveManager.get_seconds_since_last_played()
 	var min_seconds: float = balance.get("offline_min_seconds", 60)
@@ -65,6 +67,9 @@ func _load_data_files() -> void:
 	quests = QuestManager.new()
 	quests.setup(_read_json("res://data/quests.json"))
 	add_child(quests)
+	iap = IAPManager.new()
+	iap.setup(_read_json("res://data/iap.json"))
+	add_child(iap)
 
 func _read_json(path: String) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
@@ -279,6 +284,7 @@ func complete_prestige_with_bonus(waves_survived: int) -> void:
 	var bonus_per_wave: float = _minigame_data.get("orbit_bonus_per_wave", 0.1)
 	var bonus_mult: float = 1.0 + waves_survived * bonus_per_wave
 	var final_orbits: int = int(_pre_prestige_orbits * bonus_mult)
+	var new_mods := prestige.evaluate_weave(waves_survived)
 	prestige.add_orbits(final_orbits)
 	prestige.prestige_count += 1
 	prestige.total_energy_produced = 0.0
@@ -293,6 +299,8 @@ func complete_prestige_with_bonus(waves_survived: int) -> void:
 	achievements.reset()
 	achievements.set_initialized(true)
 	quests.reset()
+	prestige.run_modifiers = new_mods
+	prestige.start_run()
 	_in_minigame = false
 	_return_to_prestige_tab = true
 	_post_prestige_pending = final_orbits
@@ -315,6 +323,7 @@ func _apply_save(data: Dictionary) -> void:
 	events.load_state(data.get("events", {}))
 	achievements.load_state(data.get("achievements", {}))
 	quests.load_state(data.get("quests", {}))
+	iap.load_state(data.get("iap", {}))
 
 func get_save_data() -> Dictionary:
 	return {
@@ -328,6 +337,7 @@ func get_save_data() -> Dictionary:
 		"events": events.get_state(),
 		"achievements": achievements.get_state(),
 		"quests": quests.get_state(),
+		"iap": iap.get_state(),
 	}
 
 func consume_post_prestige_orbits() -> int:

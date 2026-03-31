@@ -6,6 +6,9 @@ var orbits: int = 0
 var prestige_count: int = 0
 var talent_levels: Dictionary = {}
 var total_energy_produced: float = 0.0
+var run_modifiers: Dictionary = {}
+var _run_start_time: float = 0.0
+var _run_events_completed: int = 0
 
 var _threshold_base: float = 500_000.0
 var _threshold_growth: float = 3.0
@@ -143,6 +146,26 @@ func get_orbit_multiplier() -> float:
 func has_auto_start() -> bool:
 	return get_talent_level("auto_start") >= 1
 
+# ── Orbital Memory Weave ─────────────────────────────────────────────────────
+
+func start_run() -> void:
+	_run_start_time = Time.get_unix_time_from_system()
+	_run_events_completed = 0
+
+func record_event() -> void:
+	_run_events_completed += 1
+
+func evaluate_weave(waves_survived: int) -> Dictionary:
+	var mods: Dictionary = {}
+	var run_duration := Time.get_unix_time_from_system() - _run_start_time
+	if _run_start_time > 0.0 and run_duration < 2700.0:
+		mods["tap_bonus"] = 2.0
+	if waves_survived >= 8:
+		mods["hp_bonus"] = 1.25
+	if _run_events_completed >= 4:
+		mods["event_speed"] = 0.5
+	return mods
+
 # ── Save/load ────────────────────────────────────────────────────────────────
 
 func get_state() -> Dictionary:
@@ -151,12 +174,14 @@ func get_state() -> Dictionary:
 		"prestige_count": prestige_count,
 		"talent_levels": talent_levels.duplicate(),
 		"total_energy_produced": total_energy_produced,
+		"run_modifiers": run_modifiers.duplicate(),
 	}
 
 func load_state(state: Dictionary) -> void:
 	orbits = int(state.get("orbits", 0))
 	prestige_count = int(state.get("prestige_count", 0))
 	total_energy_produced = float(state.get("total_energy_produced", 0.0))
+	run_modifiers = state.get("run_modifiers", {})
 	var saved_talents: Dictionary = state.get("talent_levels", {})
 	for tid in talent_levels:
 		talent_levels[tid] = int(saved_talents.get(tid, 0))
