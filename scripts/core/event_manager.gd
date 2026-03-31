@@ -213,6 +213,7 @@ func get_state() -> Dictionary:
 		"history": _history.duplicate(),
 		"milestones": _milestones_triggered.duplicate(),
 		"buffs": buffs_data,
+		"paused": _paused,
 	}
 
 func load_state(state: Dictionary) -> void:
@@ -225,6 +226,7 @@ func load_state(state: Dictionary) -> void:
 	for k in state.get("milestones", {}):
 		_milestones_triggered[k] = state["milestones"][k]
 	_active_buffs.clear()
+	_paused = bool(state.get("paused", false))
 	for b in state.get("buffs", []):
 		_active_buffs.append({"id": str(b.get("id", "")), "remaining": float(b.get("remaining", 0))})
 

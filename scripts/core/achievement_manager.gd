@@ -102,6 +102,8 @@ func _check_condition(ach_id: String) -> bool:
 			return GameManager.prestige.prestige_count >= int(cond.get("count", 1))
 		"research_count":
 			return _stats["total_research_bought"] >= int(cond.get("count", 1))
+		"research_unlocked":
+			return GameManager.research.is_unlocked(cond.get("node", ""))
 		"research_all_maxed":
 			return GameManager.research.all_maxed()
 		"module_unlocked":
@@ -144,6 +146,9 @@ func _apply_reward(reward: Dictionary) -> void:
 		"orbits":
 			GameManager.prestige.add_orbits(int(amount))
 
+func set_suppress_rewards(val: bool) -> void:
+	_suppress_rewards = val
+
 func get_unlocked_count() -> int:
 	var count := 0
 	for ach_id in _unlocked:
@@ -153,6 +158,18 @@ func get_unlocked_count() -> int:
 
 func is_unlocked(ach_id: String) -> bool:
 	return _unlocked.get(ach_id, false)
+
+func reset() -> void:
+	_unlocked.clear()
+	_stats = {
+		"total_taps": 0,
+		"total_modules_bought": 0,
+		"total_research_bought": 0,
+		"total_events_completed": 0,
+		"last_stand_best_wave": 0,
+		"cumulative_energy": 0.0,
+	}
+	_initialized = false
 
 func get_stats() -> Dictionary:
 	return _stats

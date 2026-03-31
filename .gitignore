@@ -1,6 +1,7 @@
 # Godot cache
 .godot/
 *.import
+*.uid
 
 # Builds
 export/

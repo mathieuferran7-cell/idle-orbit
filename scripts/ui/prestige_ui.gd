@@ -120,31 +120,32 @@ func _build_ui() -> void:
 	prestige_hbox.add_child(_prestige_btn)
 
 	# ── DEV MENU ─────────────────────────────────────────────────────────
-	inner.add_child(HSeparator.new())
-	var dev_title := Label.new()
-	dev_title.text = "[DEV]"
-	dev_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	dev_title.add_theme_font_size_override("font_size", 24)
-	dev_title.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
-	inner.add_child(dev_title)
+	if OS.is_debug_build():
+		inner.add_child(HSeparator.new())
+		var dev_title := Label.new()
+		dev_title.text = "[DEV]"
+		dev_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		dev_title.add_theme_font_size_override("font_size", 24)
+		dev_title.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+		inner.add_child(dev_title)
 
-	var dev_minigame := Button.new()
-	dev_minigame.text = "Lancer Last Stand"
-	dev_minigame.custom_minimum_size = Vector2(0, 70)
-	dev_minigame.add_theme_font_size_override("font_size", 24)
-	dev_minigame.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
-	dev_minigame.pressed.connect(_on_dev_minigame)
-	inner.add_child(dev_minigame)
+		var dev_minigame := Button.new()
+		dev_minigame.text = "Lancer Last Stand"
+		dev_minigame.custom_minimum_size = Vector2(0, 70)
+		dev_minigame.add_theme_font_size_override("font_size", 24)
+		dev_minigame.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+		dev_minigame.pressed.connect(_on_dev_minigame)
+		inner.add_child(dev_minigame)
 
-	for eid in GameManager.events.data:
-		var evt: Dictionary = GameManager.events.data[eid]
-		var btn := Button.new()
-		btn.text = "%s %s" % [evt.get("icon", ""), evt.get("title", eid)]
-		btn.custom_minimum_size = Vector2(0, 60)
-		btn.add_theme_font_size_override("font_size", 22)
-		btn.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
-		btn.pressed.connect(_on_dev_event.bind(eid))
-		inner.add_child(btn)
+		for eid in GameManager.events.data:
+			var evt: Dictionary = GameManager.events.data[eid]
+			var btn := Button.new()
+			btn.text = "%s %s" % [evt.get("icon", ""), evt.get("title", eid)]
+			btn.custom_minimum_size = Vector2(0, 60)
+			btn.add_theme_font_size_override("font_size", 22)
+			btn.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+			btn.pressed.connect(_on_dev_event.bind(eid))
+			inner.add_child(btn)
 
 	_refresh_all()
 

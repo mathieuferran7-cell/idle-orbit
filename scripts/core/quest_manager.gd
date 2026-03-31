@@ -43,14 +43,10 @@ func _connect_signals() -> void:
 # ── Reset logic ──────────────────────────────────────────────────────────────
 
 func _get_day_of_year() -> int:
-	var dt := Time.get_datetime_dict_from_system()
-	# Simple day hash: year * 1000 + day_of_year approximation
-	return int(dt.get("year", 2026)) * 1000 + int(dt.get("month", 1)) * 31 + int(dt.get("day", 1))
+	return int(Time.get_unix_time_from_system() / 86400)
 
 func _get_week_number() -> int:
-	var dt := Time.get_datetime_dict_from_system()
-	var day_approx := int(dt.get("month", 1)) * 31 + int(dt.get("day", 1))
-	return int(dt.get("year", 2026)) * 100 + (day_approx / 7)
+	return int(Time.get_unix_time_from_system() / 604800)
 
 func _reset_if_needed() -> void:
 	var today := _get_day_of_year()
@@ -97,13 +93,13 @@ func _pick_daily_quests(seed_val: int) -> void:
 func _get_scale_factor() -> float:
 	return 1.0 + GameManager.prestige.prestige_count * 0.5
 
-func _get_scaled_target(quest: Dictionary) -> int:
+func get_scaled_target(quest: Dictionary) -> int:
 	var base: int = int(quest.get("objective", {}).get("count", 1))
 	if quest.get("scale_with_prestige", false):
 		return int(base * _get_scale_factor())
 	return base
 
-func _get_scaled_reward_amount(quest: Dictionary) -> int:
+func get_scaled_reward_amount(quest: Dictionary) -> int:
 	var base: int = int(quest.get("reward", {}).get("amount", 0))
 	if quest.get("scale_with_prestige", false):
 		return int(base * _get_scale_factor())
@@ -122,7 +118,7 @@ func _track(objective_type: String, amount: int) -> void:
 			var prev: int = _daily_progress.get(qid, 0)
 			var new_val: int = prev + amount
 			_daily_progress[qid] = new_val
-			var target: int = _get_scaled_target(quest)
+			var target: int = get_scaled_target(quest)
 			EventBus.quest_progress.emit(qid, mini(new_val, target), target)
 			if new_val >= target and prev < target:
 				EventBus.quest_completed.emit(qid)
@@ -136,7 +132,7 @@ func _track(objective_type: String, amount: int) -> void:
 			var prev: int = _weekly_progress.get(qid, 0)
 			var new_val: int = prev + amount
 			_weekly_progress[qid] = new_val
-			var target: int = _get_scaled_target(quest)
+			var target: int = get_scaled_target(quest)
 			EventBus.quest_progress.emit(qid, mini(new_val, target), target)
 			if new_val >= target and prev < target:
 				EventBus.quest_completed.emit(qid)
@@ -197,7 +193,7 @@ func claim_quest(quest_id: String) -> bool:
 		if quest.get("id", "") == quest_id:
 			if _daily_claimed.get(quest_id, false):
 				return false
-			var target: int = _get_scaled_target(quest)
+			var target: int = get_scaled_target(quest)
 			if _daily_progress.get(quest_id, 0) < target:
 				return false
 			_daily_claimed[quest_id] = true
@@ -208,7 +204,7 @@ func claim_quest(quest_id: String) -> bool:
 		if quest.get("id", "") == quest_id:
 			if _weekly_claimed.get(quest_id, false):
 				return false
-			var target: int = _get_scaled_target(quest)
+			var target: int = get_scaled_target(quest)
 			if _weekly_progress.get(quest_id, 0) < target:
 				return false
 			_weekly_claimed[quest_id] = true
@@ -219,7 +215,7 @@ func claim_quest(quest_id: String) -> bool:
 func _apply_reward(quest: Dictionary, scaled: bool = false) -> void:
 	var reward: Dictionary = quest.get("reward", {})
 	var rtype: String = reward.get("type", "")
-	var amount: float = float(_get_scaled_reward_amount(quest)) if scaled else float(reward.get("amount", 0))
+	var amount: float = float(get_scaled_reward_amount(quest)) if scaled else float(reward.get("amount", 0))
 	match rtype:
 		"energy":
 			GameManager.add_resource("energy", amount)
@@ -228,6 +224,15 @@ func _apply_reward(quest: Dictionary, scaled: bool = false) -> void:
 		"orbits":
 			GameManager.prestige.add_orbits(int(amount))
 	AudioManager.play_sfx("upgrade")
+
+func reset() -> void:
+	_daily_progress.clear()
+	_daily_claimed.clear()
+	_weekly_progress.clear()
+	_weekly_claimed.clear()
+	_energy_accum = 0.0
+	_tech_accum = 0.0
+	_reset_if_needed()
 
 # ── Query ────────────────────────────────────────────────────────────────────
 
@@ -252,11 +257,11 @@ func is_completable(quest_id: String) -> bool:
 		return false
 	for quest in _active_daily:
 		if quest.get("id", "") == quest_id:
-			var target: int = _get_scaled_target(quest)
+			var target: int = get_scaled_target(quest)
 			return _daily_progress.get(quest_id, 0) >= target
 	for quest in _weekly_defs:
 		if quest.get("id", "") == quest_id:
-			var target: int = _get_scaled_target(quest)
+			var target: int = get_scaled_target(quest)
 			return _weekly_progress.get(quest_id, 0) >= target
 	return false
 
@@ -285,6 +290,8 @@ func get_state() -> Dictionary:
 		"daily_claimed": _daily_claimed.duplicate(),
 		"weekly_progress": _weekly_progress.duplicate(),
 		"weekly_claimed": _weekly_claimed.duplicate(),
+		"energy_accum": _energy_accum,
+		"tech_accum": _tech_accum,
 	}
 
 func load_state(state: Dictionary) -> void:
@@ -308,6 +315,8 @@ func load_state(state: Dictionary) -> void:
 					break
 		_daily_progress = state.get("daily_progress", {}).duplicate()
 		_daily_claimed = state.get("daily_claimed", {}).duplicate()
+		_energy_accum = float(state.get("energy_accum", 0.0))
+		_tech_accum = float(state.get("tech_accum", 0.0))
 
 	if _last_weekly_reset != week:
 		_reset_weekly(week)

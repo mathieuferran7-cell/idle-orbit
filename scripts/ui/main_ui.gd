@@ -66,9 +66,9 @@ func _on_game_ready() -> void:
 	_update_quest_badge()
 	AdManager.show_banner()
 	# Retroactive check: mark already-met achievements without granting rewards
-	GameManager.achievements._suppress_rewards = true
+	GameManager.achievements.set_suppress_rewards(true)
 	GameManager.achievements.check_all()
-	GameManager.achievements._suppress_rewards = false
+	GameManager.achievements.set_suppress_rewards(false)
 	if GameManager._return_to_prestige_tab:
 		GameManager._return_to_prestige_tab = false
 		_show_prestige_tab()
@@ -716,7 +716,7 @@ func _build_quests_list() -> void:
 
 func _create_quest_row(quest: Dictionary, _category: String) -> PanelContainer:
 	var qid: String = quest.get("id", "")
-	var target: int = GameManager.quests._get_scaled_target(quest)
+	var target: int = GameManager.quests.get_scaled_target(quest)
 	var progress: int = GameManager.quests.get_progress(qid)
 	var claimed: bool = GameManager.quests.is_claimed(qid)
 	var completable: bool = GameManager.quests.is_completable(qid)
@@ -773,7 +773,7 @@ func _create_quest_row(quest: Dictionary, _category: String) -> PanelContainer:
 	# Reward + Claim button
 	var reward: Dictionary = quest.get("reward", {})
 	var reward_type: String = reward.get("type", "")
-	var reward_amount: int = GameManager.quests._get_scaled_reward_amount(quest)
+	var reward_amount: int = GameManager.quests.get_scaled_reward_amount(quest)
 	var reward_icon := "⚡" if reward_type == "energy" else ("🔧" if reward_type == "tech" else "⭐")
 
 	if completable:

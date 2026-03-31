@@ -275,6 +275,8 @@ func complete_prestige_with_bonus(waves_survived: int) -> void:
 	if prestige.has_auto_start():
 		research.set_level("auto_tap", 1)
 	events.reset()
+	achievements.reset()
+	quests.reset()
 	_in_minigame = false
 	_return_to_prestige_tab = true
 	_post_prestige_pending = final_orbits
@@ -298,6 +300,8 @@ func do_prestige() -> void:
 	if prestige.has_auto_start():
 		research.set_level("auto_tap", 1)
 	events.reset()
+	achievements.reset()
+	quests.reset()
 	save()
 	EventBus.prestige_completed.emit(orbits_gained)
 	EventBus.game_ready.emit()
@@ -343,6 +347,8 @@ func full_reset() -> void:
 		module_counts[module_id] = 0
 	research.setup(research.data)
 	prestige.reset()
+	achievements.reset()
+	quests.reset()
 	EventBus.game_ready.emit()
 
 func _notification(what: int) -> void:

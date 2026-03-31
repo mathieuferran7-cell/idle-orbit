@@ -73,7 +73,7 @@
 		"name": "Automatisation",
 		"desc": "Débloquer l'auto-tap",
 		"icon": "🤖",
-		"condition": { "type": "research_count", "count": 1 },
+		"condition": { "type": "research_unlocked", "node": "auto_tap" },
 		"reward": { "type": "tech", "amount": 20 }
 	},
 	"energy_100k": {
