@@ -128,7 +128,7 @@ PRESTIGE_TALENTS = {
     # Tier 5 — deep endgame (growth 1.6)
     "module_cost_reduction": {"name": "Ingenierie", "effect": "module_disc", "per_level": 0.06, "cost": 500, "cost_growth": 1.6, "max": 5},
     "energy_plus3":   {"name": "Energie+++",   "effect": "energy_mult",     "per_level": 0.30, "cost": 800, "cost_growth": 1.6, "max": 3},
-    "prestige_accelerator": {"name": "Accelerateur", "effect": "threshold_disc", "per_level": 0.10, "cost": 1000, "cost_growth": 1.6, "max": 3},
+    "prestige_accelerator": {"name": "Accelerateur", "effect": "threshold_disc", "per_level": 0.10, "cost": 600, "cost_growth": 1.5, "max": 3},
     "deep_mining":    {"name": "Forage Profond", "effect": "tech_tap_mult", "per_level": 0.20, "cost": 1500, "cost_growth": 1.6, "max": 3},
 }
 
@@ -241,6 +241,14 @@ def module_cost(modules, mid, counts, cost_mult):
     growth = mod.get("cost_growth", 1.15)
     return base * math.pow(growth, counts.get(mid, 0)) * cost_mult
 
+def module_tech_cost(modules, mid, counts):
+    mod = modules[mid]
+    base = mod.get("tech_cost", 0)
+    if base <= 0:
+        return 0
+    growth = mod.get("tech_cost_growth", 1.15)
+    return base * math.pow(growth, counts.get(mid, 0))
+
 def module_unlocked(modules, mid, counts):
     cond = modules[mid].get("unlock_condition")
     if not cond:
@@ -341,8 +349,10 @@ class AchievementTracker:
 
 # ── Single run simulation ────────────────────────────────────────────────────
 
-def run_single(balance, modules, research_data, prestige, sim_duration=7200, tick=0.25, taps_per_second=4.0, energy_target=None, ach_tracker=None):
+def run_single(balance, modules, research_data, prestige, sim_duration=7200, tick=0.25, taps_per_second=4.0, energy_target=None, ach_tracker=None, weave_mods=None):
     """Run a single prestige cycle. Stops when energy_target reached or sim_duration exceeded."""
+    if weave_mods is None:
+        weave_mods = {}
 
     starting_energy = prestige.get_starting_energy(balance.get("starting_energy", 10.0))
     energy = starting_energy
@@ -353,7 +363,7 @@ def run_single(balance, modules, research_data, prestige, sim_duration=7200, tic
     global_speed = prestige.get_global_speed()
     research_discount = prestige.get_research_discount()
     prestige_energy_mult = prestige.get_energy_mult()
-    prestige_tech_mult = prestige.get_tech_tap_mult()
+    prestige_tech_mult = prestige.get_tech_tap_mult() * weave_mods.get("tap_bonus", 1.0)
     prestige_module_disc = prestige.get_module_discount()
 
     # Auto-start: begin with auto_tap lv1 already unlocked
@@ -365,6 +375,10 @@ def run_single(balance, modules, research_data, prestige, sim_duration=7200, tic
     auto_tap_accum = 0.0
     all_research_done_at = None
     events = []
+    run_events_completed = 0
+    # Simulate FTL events every ~7.5 min (avg of 5-10min interval)
+    event_interval = 450.0 * weave_mods.get("event_speed", 1.0)
+    next_event_time = event_interval
 
     while t <= sim_duration:
         # Production (scaled by global speed)
@@ -412,17 +426,21 @@ def run_single(balance, modules, research_data, prestige, sim_duration=7200, tic
                     ach_tracker.on_research_bought()
                 break
 
-        # Module buy (cheapest greedy)
+        # Module buy (cheapest greedy, check tech cost too)
         best_id, best_cost = None, float("inf")
         for mid in modules:
             if not module_unlocked(modules, mid, counts):
                 continue
             c = module_cost(modules, mid, counts, cost_mult)
-            if c <= energy and c < best_cost:
+            tc = module_tech_cost(modules, mid, counts)
+            if c <= energy and tc <= tech and c < best_cost:
                 best_cost = c
                 best_id = mid
         if best_id:
             energy -= best_cost
+            tc = module_tech_cost(modules, best_id, counts)
+            if tc > 0:
+                tech -= tc
             counts[best_id] += 1
             if ach_tracker:
                 ach_tracker.on_module_bought()
@@ -431,6 +449,11 @@ def run_single(balance, modules, research_data, prestige, sim_duration=7200, tic
         if all_research_done_at is None and research.all_maxed():
             all_research_done_at = t
             events.append((t, "ALL_RESEARCH_MAXED"))
+
+        # Simulate FTL events (for weave tracking)
+        if t >= next_event_time:
+            run_events_completed += 1
+            next_event_time += event_interval
 
         # Achievement check (every 30s to avoid perf hit)
         if ach_tracker and int(t * 4) % 120 == 0:
@@ -447,7 +470,8 @@ def run_single(balance, modules, research_data, prestige, sim_duration=7200, tic
     if ach_tracker:
         ach_tracker.check_all(t, counts, modules, research, prestige)
 
-    return total_energy_produced, all_research_done_at, events, e_rate, t
+    run_meta = {"duration": t, "events_completed": run_events_completed}
+    return total_energy_produced, all_research_done_at, events, e_rate, t, run_meta
 
 def format_time(seconds):
     if seconds is None:
@@ -469,26 +493,41 @@ def run_prestige_sim(num_runs=5, run_duration=2400):
     print(f"{num_runs} runs, {run_duration//60}min each, 4 taps/s, auto-buy, greedy talent allocation")
     print("=" * 90)
     print()
-    print(f"{'RUN':<5} {'TARGET':>12} {'DURATION':>10} {'ORBITS':>8} {'TOTAL':>8} {'E.PROD':>12} {'E/s.END':>10}  TALENTS")
-    print("-" * 110)
+    print(f"{'RUN':<5} {'TARGET':>12} {'DURATION':>10} {'ORBITS':>8} {'TOTAL':>8} {'E.PROD':>12} {'E/s.END':>10}  WEAVE  TALENTS")
+    print("-" * 120)
 
+    weave_mods = {}
     for run_idx in range(1, num_runs + 1):
         prestige.auto_allocate()
         threshold = prestige.get_prestige_threshold()
 
-        total_e, res_done_at, events, final_e_rate, run_time = run_single(
+        total_e, res_done_at, events, final_e_rate, run_time, run_meta = run_single(
             balance, modules, research_data, prestige,
             sim_duration=14400, tick=0.25, taps_per_second=4.0,
-            energy_target=threshold
+            energy_target=threshold, weave_mods=weave_mods
         )
 
+        # Simulate Last Stand waves (prestige_count * 2 + 3, capped at 10)
+        simulated_waves = min(prestige.prestige_count * 2 + 3, 10)
         orbits_gained = prestige.calculate_orbits(total_e)
         prestige.add_orbits(orbits_gained)
         prestige.prestige_count += 1
 
+        # Evaluate Memory Weave for next run
+        new_mods = {}
+        if run_meta["duration"] < 2700:
+            new_mods["tap_bonus"] = 2.0
+        if simulated_waves >= 8:
+            new_mods["hp_bonus"] = 1.25
+        if run_meta["events_completed"] >= 4:
+            new_mods["event_speed"] = 0.5
+
+        weave_str = " ".join(f"{k}" for k in weave_mods) if weave_mods else "-"
         duration_str = format_time(run_time)
         target_str = f"{threshold:,.0f}"
-        print(f"  {run_idx:<3} {target_str:>12} {duration_str:>9}  +{orbits_gained:>5}  {prestige.total_orbits:>7}  {total_e:>11,.0f}  {final_e_rate:>9,.0f}/s  {prestige.summary()}")
+        print(f"  {run_idx:<3} {target_str:>12} {duration_str:>9}  +{orbits_gained:>5}  {prestige.total_orbits:>7}  {total_e:>11,.0f}  {final_e_rate:>9,.0f}/s  {weave_str:<12} {prestige.summary()}")
+
+        weave_mods = new_mods
 
         key_events = [e for e in events if "ALL_RESEARCH" in e[1] or "TARGET" in e[1]]
         for evt_time, evt_text in key_events:
@@ -518,7 +557,7 @@ def run_single_mode():
     research_data = read_json("data/research.json")
     prestige = Prestige()
 
-    total_e, res_done_at, events, final_e_rate, run_time = run_single(
+    total_e, res_done_at, events, final_e_rate, run_time, run_meta = run_single(
         balance, modules, research_data, prestige,
         sim_duration=3600, tick=0.25, taps_per_second=4.0
     )
@@ -560,7 +599,7 @@ def run_achievements_sim(num_runs=8):
         simulated_waves = min(prestige.prestige_count * 2 + 3, 10)
         tracker.on_last_stand(simulated_waves)
 
-        total_e, res_done_at, events, final_e_rate, run_time = run_single(
+        total_e, res_done_at, events, final_e_rate, run_time, run_meta = run_single(
             balance, modules, research_data, prestige,
             sim_duration=14400, tick=0.25, taps_per_second=4.0,
             energy_target=threshold, ach_tracker=tracker
