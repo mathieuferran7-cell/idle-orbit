@@ -216,7 +216,8 @@ func get_state() -> Dictionary:
 	}
 
 func load_state(state: Dictionary) -> void:
-	_timer = float(state.get("timer", _min_interval))
+	# Force minimum timer on load to prevent events firing immediately after offline return
+	_timer = maxf(float(state.get("timer", _min_interval)), _min_interval)
 	_history = []
 	for h in state.get("history", []):
 		_history.append(str(h))

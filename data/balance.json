@@ -11,7 +11,7 @@
 	"prestige_threshold_base": 500000.0,
 	"prestige_threshold_growth": 3.0,
 	"module_tap_bonus_per_unit": 0.10,
-	"event_min_interval": 120,
-	"event_max_interval": 300,
-	"event_cooldown_after_choice": 60
+	"event_min_interval": 300,
+	"event_max_interval": 600,
+	"event_cooldown_after_choice": 120
 }
