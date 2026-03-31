@@ -6,7 +6,7 @@
 - **Concept** : Space station idle — Build, automate, conquer the stars
 - **Genre** : Idle/Incremental + active mining loop + prestige loop + mini-jeu Last Stand + événements FTL
 - **Cible** : Android-first (Godot 4.6)
-- **Play Store** : test fermé actif (Grimoire Culinaire dev account), v1.1.3 (code 15)
+- **Play Store** : test fermé actif (Grimoire Culinaire dev account), v1.2.0 (code 16)
 - **Ce projet est un reboot de Little Orbit v1**
 
 ## Stack technique
@@ -64,7 +64,7 @@ shaders/                    # Shaders visuels CanvasItem
 ├── starfield.gdshader      # Fond étoilé 3 couches parallaxe avec scintillement
 └── station_glow.gdshader   # Glow radial station (pulse cyan→rouge selon HP)
 data/                       # SOURCE DE VÉRITÉ pour toute la balance
-├── modules.json            # 7 modules (4 énergie, 3 tech)
+├── modules.json            # 8 modules (5 énergie dont 1 convertisseur tech, 3 tech)
 ├── balance.json            # 15 constantes globales (tick, offline, prestige, mining, events)
 ├── prestige.json           # 15 talents sur 5 tiers (coûts incrémentaux base * growth^level)
 ├── research.json           # 6 noeuds de recherche
@@ -126,7 +126,7 @@ PRESTIGE (2 options)
   - Tier 3 : énergie++, offline+, modules-
   - Tier 4 : orbit+, warp
   - Tier 5 : ingénierie (module cost), énergie+++, accélérateur (threshold), forage profond (tech/tap)
-- **Flow** : prestige_ui → Prestige Rapide (quick_prestige, 0 bonus) OU Last Stand (start_prestige_minigame → last_stand.tscn → complete_prestige_with_bonus) → main.tscn (onglet Prestige)
+- **Flow** : prestige_ui → Prestige Rapide (quick_prestige, 70% orbits, 0 bonus) OU Last Stand (start_prestige_minigame → last_stand.tscn → complete_prestige_with_bonus) → main.tscn (onglet Prestige)
 
 ## Mini-jeu Last Stand
 - Station au centre (viewport dynamique), menaces 360°
@@ -191,7 +191,7 @@ PRESTIGE (2 options)
 - **Keystore** : `%APPDATA%\Godot\keystores\idleorbit-release.keystore` (alias: idleorbit, pass: OrbitRelease2026!)
 - **Export** : Godot headless `--export-release "Android"` → jarsigner → idle-orbit-signed.aab
 - **Config** : arm64-v8a, SDK 24-35, portrait forcé (`window/handheld/orientation=1`)
-- **Version actuelle** : code 15, name 1.1.3
+- **Version actuelle** : code 16, name 1.2.0
 - **Manifeste release** : android/build/src/release/AndroidManifest.xml (INTERNET permission, portrait, AdMob App ID auto-injecté par plugin)
 
 ## Ce qu'on NE reproduit PAS (erreurs v1)
