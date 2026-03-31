@@ -111,16 +111,9 @@ func _check_condition(ach_id: String) -> bool:
 		"total_orbits":
 			return GameManager.prestige.orbits >= int(cond.get("count", 1))
 		"talent_count":
-			var total := 0
-			for tid in GameManager.prestige.talent_levels:
-				total += GameManager.prestige.talent_levels[tid]
-			return total >= int(cond.get("count", 1))
+			return GameManager.prestige.get_total_talent_levels() >= int(cond.get("count", 1))
 		"all_talents":
-			for tid in GameManager.prestige.talent_levels:
-				var max_lvl: int = int(GameManager.prestige.data.get(tid, {}).get("max", 0))
-				if GameManager.prestige.talent_levels[tid] < max_lvl:
-					return false
-			return true
+			return GameManager.prestige.all_talents_maxed()
 		"last_stand_waves":
 			return _stats["last_stand_best_wave"] >= int(cond.get("count", 1))
 		"event_count":
@@ -148,6 +141,9 @@ func _apply_reward(reward: Dictionary) -> void:
 
 func set_suppress_rewards(val: bool) -> void:
 	_suppress_rewards = val
+
+func set_initialized(val: bool) -> void:
+	_initialized = val
 
 func get_unlocked_count() -> int:
 	var count := 0

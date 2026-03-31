@@ -318,6 +318,8 @@ class AchievementTracker:
             return prestige.prestige_count >= cond.get("count", 1)
         elif ctype == "research_count":
             return self.stats["total_research_bought"] >= cond.get("count", 1)
+        elif ctype == "research_unlocked":
+            return research.is_unlocked(cond.get("node", ""))
         elif ctype == "research_all_maxed":
             return research.all_maxed()
         elif ctype == "module_unlocked":

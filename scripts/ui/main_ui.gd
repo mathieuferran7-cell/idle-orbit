@@ -47,10 +47,9 @@ func _ready() -> void:
 	tab_prestige_btn.pressed.connect(_show_prestige_tab)
 	tab_quests_btn.pressed.connect(_show_quests_tab)
 	# If returning from minigame, emit game_ready ourselves (autoload _post_init won't re-fire)
-	if GameManager._post_prestige_pending >= 0:
-		var orbits := GameManager._post_prestige_pending
-		GameManager._post_prestige_pending = -1
-		call_deferred("_emit_post_prestige", orbits)
+	var pending_orbits := GameManager.consume_post_prestige_orbits()
+	if pending_orbits >= 0:
+		call_deferred("_emit_post_prestige", pending_orbits)
 
 func _emit_post_prestige(orbits: int) -> void:
 	EventBus.game_ready.emit()
@@ -69,8 +68,7 @@ func _on_game_ready() -> void:
 	GameManager.achievements.set_suppress_rewards(true)
 	GameManager.achievements.check_all()
 	GameManager.achievements.set_suppress_rewards(false)
-	if GameManager._return_to_prestige_tab:
-		GameManager._return_to_prestige_tab = false
+	if GameManager.should_return_to_prestige_tab():
 		_show_prestige_tab()
 	else:
 		_show_modules_tab()

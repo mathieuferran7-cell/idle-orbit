@@ -97,6 +97,9 @@ func pick_event() -> Dictionary:
 	evt["id"] = eid
 	return evt
 
+func set_paused(value: bool) -> void:
+	_paused = value
+
 func on_choice_made() -> void:
 	_paused = false
 	_timer = _cooldown_after + randf_range(0, _max_interval - _min_interval)

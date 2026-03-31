@@ -6,7 +6,7 @@
 - **Concept** : Space station idle — Build, automate, conquer the stars
 - **Genre** : Idle/Incremental + active mining loop + prestige loop + mini-jeu Last Stand + événements FTL
 - **Cible** : Android-first (Godot 4.6)
-- **Play Store** : test fermé actif (Grimoire Culinaire dev account), v1.1.0 (code 11)
+- **Play Store** : test fermé actif (Grimoire Culinaire dev account), v1.1.2 (code 14)
 - **Ce projet est un reboot de Little Orbit v1**
 
 ## Stack technique
@@ -38,7 +38,7 @@ scripts/
 │   ├── audio_manager.gd    # 11 SFX procéduraux
 │   └── ad_manager.gd       # AdMob rewarded + banner, fallback desktop
 ├── core/           # Systèmes de jeu
-│   ├── prestige_manager.gd # Orbits, 15 talents permanents (5 tiers), seuils x3 avec réduction, add_orbits()
+│   ├── prestige_manager.gd # Orbits, 15 talents permanents (5 tiers), coûts incrémentaux, seuils x3 avec réduction, add_orbits()
 │   ├── research_manager.gd # 6 noeuds, get_effective_cost(), set_level(), all_maxed()
 │   ├── mining_manager.gd   # Loop mining actif + auto-tap + module scaling
 │   ├── event_manager.gd    # Timer aléatoire, 7 events FTL, 5 buffs, 3 milestones, get_state/load_state
@@ -66,7 +66,7 @@ shaders/                    # Shaders visuels CanvasItem
 data/                       # SOURCE DE VÉRITÉ pour toute la balance
 ├── modules.json            # 7 modules (4 énergie, 3 tech)
 ├── balance.json            # 15 constantes globales (tick, offline, prestige, mining, events)
-├── prestige.json           # 15 talents sur 5 tiers
+├── prestige.json           # 15 talents sur 5 tiers (coûts incrémentaux base * growth^level)
 ├── research.json           # 6 noeuds de recherche
 ├── events.json             # 7 événements FTL avec choix + récompenses
 ├── minigame.json           # Balance Last Stand (station, tourelles, ennemis, 10 vagues + overflow)
@@ -139,7 +139,7 @@ PRESTIGE (2 options)
 - Transition : `change_scene_to_packed` aller-retour, autoloads persistent, _in_minigame flag pause production
 
 ## Événements FTL
-- Timer aléatoire (2-5 min) + 3 milestones (premier tier 2, première recherche max, premier prestige)
+- Timer aléatoire (5-10 min) + 3 milestones (premier tier 2, première recherche max, premier prestige)
 - 7 événements narratifs spatiaux avec 3 choix (2 gratuits + 1 premium pub rewarded)
 - Récompenses : énergie, tech, orbits, buffs temporaires, modules gratuits
 - Scaling proportionnel à sqrt(total_energy_produced)
@@ -191,7 +191,7 @@ PRESTIGE (2 options)
 - **Keystore** : `%APPDATA%\Godot\keystores\idleorbit-release.keystore` (alias: idleorbit, pass: OrbitRelease2026!)
 - **Export** : Godot headless `--export-release "Android"` → jarsigner → idle-orbit-signed.aab
 - **Config** : arm64-v8a, SDK 24-35, portrait forcé (`window/handheld/orientation=1`)
-- **Version actuelle** : code 11, name 1.1.0
+- **Version actuelle** : code 14, name 1.1.2
 - **Manifeste release** : android/build/src/release/AndroidManifest.xml (INTERNET permission, portrait, AdMob App ID auto-injecté par plugin)
 
 ## Ce qu'on NE reproduit PAS (erreurs v1)

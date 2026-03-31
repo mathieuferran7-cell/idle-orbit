@@ -29,7 +29,7 @@ func _post_init() -> void:
 	if not save_data.is_empty():
 		_apply_save(save_data)
 	else:
-		achievements._initialized = true
+		achievements.set_initialized(true)
 	EventBus.game_loaded.emit()
 	var offline_seconds := SaveManager.get_seconds_since_last_played()
 	var min_seconds: float = balance.get("offline_min_seconds", 60)
@@ -234,7 +234,7 @@ func start_prestige_minigame() -> void:
 	_pre_prestige_orbits = prestige.get_pending_orbits()
 	save()
 	_in_minigame = true
-	events._paused = true
+	events.set_paused(true)
 	AdManager.hide_banner()
 	var scene := load("res://scenes/minigame/last_stand.tscn")
 	get_tree().change_scene_to_packed(scene)
@@ -283,29 +283,6 @@ func complete_prestige_with_bonus(waves_survived: int) -> void:
 	save()
 	get_tree().change_scene_to_packed(load("res://scenes/main/main.tscn"))
 
-# ── Prestige ─────────────────────────────────────────────────────────────────
-
-func do_prestige() -> void:
-	var orbits_gained := prestige.get_pending_orbits()
-	prestige.add_orbits(orbits_gained)
-	prestige.prestige_count += 1
-	prestige.total_energy_produced = 0.0
-	# Reset run state
-	energy = prestige.get_starting_energy(float(balance.get("starting_energy", 10.0)))
-	tech = 0.0
-	for module_id in module_counts:
-		module_counts[module_id] = 0
-	research.setup(research.data)
-	# Auto-start talent
-	if prestige.has_auto_start():
-		research.set_level("auto_tap", 1)
-	events.reset()
-	achievements.reset()
-	quests.reset()
-	save()
-	EventBus.prestige_completed.emit(orbits_gained)
-	EventBus.game_ready.emit()
-
 # ── Save/load ────────────────────────────────────────────────────────────────
 
 func _apply_save(data: Dictionary) -> void:
@@ -332,6 +309,16 @@ func get_save_data() -> Dictionary:
 		"achievements": achievements.get_state(),
 		"quests": quests.get_state(),
 	}
+
+func consume_post_prestige_orbits() -> int:
+	var val := _post_prestige_pending
+	_post_prestige_pending = -1
+	return val
+
+func should_return_to_prestige_tab() -> bool:
+	var val := _return_to_prestige_tab
+	_return_to_prestige_tab = false
+	return val
 
 func claim_quest(quest_id: String) -> bool:
 	return quests.claim_quest(quest_id)

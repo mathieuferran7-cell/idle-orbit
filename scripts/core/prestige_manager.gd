@@ -48,6 +48,18 @@ func get_talent_level(tid: String) -> int:
 func get_talent_max(tid: String) -> int:
 	return int(data.get(tid, {}).get("max", 0))
 
+func get_total_talent_levels() -> int:
+	var total := 0
+	for tid in talent_levels:
+		total += talent_levels[tid]
+	return total
+
+func all_talents_maxed() -> bool:
+	for tid in talent_levels:
+		if talent_levels[tid] < get_talent_max(tid):
+			return false
+	return true
+
 func get_talent_base_cost(tid: String) -> int:
 	return int(data.get(tid, {}).get("cost", 999))
 
