@@ -1,11 +1,12 @@
 extends Control
 
-const TIER_NAMES := ["", "Tier 1", "Tier 2", "Tier 3", "Tier 4"]
+const TIER_NAMES := ["", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]
 
 var _talent_buttons: Dictionary = {}
 var _orbits_label: Label = null
 var _progress_label: Label = null
 var _prestige_btn: Button = null
+var _quick_prestige_btn: Button = null
 
 func _ready() -> void:
 	EventBus.game_ready.connect(_on_game_ready)
@@ -76,7 +77,7 @@ func _build_ui() -> void:
 			tiers[tier] = []
 		tiers[tier].append(tid)
 
-	for tier_num in range(1, 5):
+	for tier_num in range(1, 6):
 		if tier_num not in tiers:
 			continue
 		var tier_label := Label.new()
@@ -98,11 +99,25 @@ func _build_ui() -> void:
 	_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	inner.add_child(_progress_label)
 
+	var prestige_hbox := HBoxContainer.new()
+	prestige_hbox.add_theme_constant_override("separation", 12)
+	inner.add_child(prestige_hbox)
+
+	_quick_prestige_btn = Button.new()
+	_quick_prestige_btn.text = "PRESTIGE RAPIDE"
+	_quick_prestige_btn.custom_minimum_size = Vector2(0, 100)
+	_quick_prestige_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_quick_prestige_btn.add_theme_font_size_override("font_size", 28)
+	_quick_prestige_btn.pressed.connect(_on_quick_prestige)
+	prestige_hbox.add_child(_quick_prestige_btn)
+
 	_prestige_btn = Button.new()
-	_prestige_btn.custom_minimum_size = Vector2(0, 110)
-	_prestige_btn.add_theme_font_size_override("font_size", 36)
+	_prestige_btn.custom_minimum_size = Vector2(0, 100)
+	_prestige_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_prestige_btn.add_theme_font_size_override("font_size", 28)
+	_prestige_btn.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 	_prestige_btn.pressed.connect(_on_prestige_pressed)
-	inner.add_child(_prestige_btn)
+	prestige_hbox.add_child(_prestige_btn)
 
 	# ── DEV MENU ─────────────────────────────────────────────────────────
 	inner.add_child(HSeparator.new())
@@ -208,12 +223,12 @@ func _refresh_all() -> void:
 
 	if _prestige_btn:
 		var pending := p.get_pending_orbits()
-		if p.can_prestige():
-			_prestige_btn.text = "PRESTIGE (+%d ⭐)" % pending
-			_prestige_btn.disabled = false
-		else:
-			_prestige_btn.text = "PRESTIGE (+%d ⭐)" % pending
-			_prestige_btn.disabled = true
+		var can := p.can_prestige()
+		_prestige_btn.text = "LAST STAND (+%d ⭐)" % pending
+		_prestige_btn.disabled = not can
+		if _quick_prestige_btn:
+			_quick_prestige_btn.text = "RAPIDE (+%d ⭐)" % pending
+			_quick_prestige_btn.disabled = not can
 
 func _refresh_talent_row(tid: String) -> void:
 	var row: PanelContainer = _talent_buttons.get(tid)
@@ -246,6 +261,10 @@ func _on_talent_buy(tid: String) -> void:
 	if GameManager.buy_talent(tid):
 		AudioManager.play_sfx("upgrade")
 		_refresh_all()
+
+func _on_quick_prestige() -> void:
+	if GameManager.prestige.can_prestige():
+		GameManager.quick_prestige()
 
 func _on_prestige_pressed() -> void:
 	if GameManager.prestige.can_prestige():

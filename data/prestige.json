@@ -86,5 +86,37 @@
 		"cost": 80,
 		"max": 2,
 		"desc": "+15% vitesse globale/niv"
+	},
+	"module_cost_reduction": {
+		"name": "Ingénierie",
+		"tier": 5,
+		"per_level": 0.06,
+		"cost": 500,
+		"max": 5,
+		"desc": "-6% coût base modules/niv"
+	},
+	"energy_plus3": {
+		"name": "Énergie+++",
+		"tier": 5,
+		"per_level": 0.30,
+		"cost": 800,
+		"max": 3,
+		"desc": "+30% production énergie/niv"
+	},
+	"prestige_accelerator": {
+		"name": "Accélérateur",
+		"tier": 5,
+		"per_level": 0.10,
+		"cost": 1000,
+		"max": 3,
+		"desc": "-10% seuil prestige/niv"
+	},
+	"deep_mining": {
+		"name": "Forage Profond",
+		"tier": 5,
+		"per_level": 0.20,
+		"cost": 1500,
+		"max": 3,
+		"desc": "+20% tech par tap/niv"
 	}
 }

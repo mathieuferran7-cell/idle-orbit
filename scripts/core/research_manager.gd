@@ -21,6 +21,12 @@ func is_unlocked(node_id: String) -> bool:
 func is_maxed(node_id: String) -> bool:
 	return get_level(node_id) >= get_max_level(node_id)
 
+func all_maxed() -> bool:
+	for node_id in _levels:
+		if not is_maxed(node_id):
+			return false
+	return true
+
 func get_next_cost(node_id: String) -> float:
 	var node: Dictionary = data.get(node_id, {})
 	var level := get_level(node_id)

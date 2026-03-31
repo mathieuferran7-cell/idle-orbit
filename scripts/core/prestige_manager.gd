@@ -22,7 +22,9 @@ func setup_balance(balance: Dictionary) -> void:
 # ── Prestige logic ───────────────────────────────────────────────────────────
 
 func get_threshold() -> float:
-	return _threshold_base * pow(_threshold_growth, prestige_count)
+	var accel := get_talent_level("prestige_accelerator") * float(data.get("prestige_accelerator", {}).get("per_level", 0))
+	var reduction := maxf(0.3, 1.0 - accel)
+	return _threshold_base * pow(_threshold_growth, prestige_count) * reduction
 
 func can_prestige() -> bool:
 	return total_energy_produced >= get_threshold()
@@ -78,12 +80,14 @@ func get_energy_mult() -> float:
 	var total := 0.0
 	for tid in data:
 		var talent: Dictionary = data[tid]
-		if tid == "energy_plus" or tid == "energy_plus2":
+		if tid in ["energy_plus", "energy_plus2", "energy_plus3"]:
 			total += get_talent_level(tid) * float(talent.get("per_level", 0))
 	return 1.0 + total
 
 func get_tech_tap_mult() -> float:
-	return 1.0 + get_talent_level("tech_plus") * float(data.get("tech_plus", {}).get("per_level", 0))
+	var total := get_talent_level("tech_plus") * float(data.get("tech_plus", {}).get("per_level", 0))
+	total += get_talent_level("deep_mining") * float(data.get("deep_mining", {}).get("per_level", 0))
+	return 1.0 + total
 
 func get_starting_energy(base: float) -> float:
 	return base + get_talent_level("start_plus") * float(data.get("start_plus", {}).get("per_level", 0))
@@ -100,6 +104,7 @@ func get_research_discount() -> float:
 
 func get_module_discount() -> float:
 	var total := get_talent_level("module_discount") * float(data.get("module_discount", {}).get("per_level", 0))
+	total += get_talent_level("module_cost_reduction") * float(data.get("module_cost_reduction", {}).get("per_level", 0))
 	return maxf(0.1, 1.0 - total)
 
 func get_offline_mult() -> float:

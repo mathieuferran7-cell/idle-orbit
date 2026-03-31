@@ -239,6 +239,10 @@ func start_prestige_minigame() -> void:
 	var scene := load("res://scenes/minigame/last_stand.tscn")
 	get_tree().change_scene_to_packed(scene)
 
+func quick_prestige() -> void:
+	_pre_prestige_orbits = prestige.get_pending_orbits()
+	complete_prestige_with_bonus(0)
+
 func get_minigame_params() -> Dictionary:
 	var total_energy_modules := 0
 	var total_tech_modules := 0

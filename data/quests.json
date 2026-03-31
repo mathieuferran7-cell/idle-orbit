@@ -19,35 +19,40 @@
 			"text": "Collecteur du jour",
 			"desc": "Produire 5 000 énergie",
 			"objective": { "type": "energy_produced", "count": 5000 },
-			"reward": { "type": "tech", "amount": 30 }
+			"reward": { "type": "tech", "amount": 30 },
+			"scale_with_prestige": true
 		},
 		{
 			"id": "daily_energy_50k",
 			"text": "Centrale active",
 			"desc": "Produire 50 000 énergie",
 			"objective": { "type": "energy_produced", "count": 50000 },
-			"reward": { "type": "tech", "amount": 100 }
+			"reward": { "type": "tech", "amount": 100 },
+			"scale_with_prestige": true
 		},
 		{
 			"id": "daily_tech_500",
 			"text": "Données techniques",
 			"desc": "Collecter 500 tech",
 			"objective": { "type": "tech_collected", "count": 500 },
-			"reward": { "type": "energy", "amount": 500 }
+			"reward": { "type": "energy", "amount": 500 },
+			"scale_with_prestige": true
 		},
 		{
 			"id": "daily_buy_3",
 			"text": "Shopping spatial",
 			"desc": "Acheter 3 modules",
 			"objective": { "type": "modules_bought", "count": 3 },
-			"reward": { "type": "energy", "amount": 200 }
+			"reward": { "type": "energy", "amount": 200 },
+			"scale_with_prestige": true
 		},
 		{
 			"id": "daily_buy_10",
 			"text": "Expansion rapide",
 			"desc": "Acheter 10 modules",
 			"objective": { "type": "modules_bought", "count": 10 },
-			"reward": { "type": "energy", "amount": 1000 }
+			"reward": { "type": "energy", "amount": 1000 },
+			"scale_with_prestige": true
 		},
 		{
 			"id": "daily_research_1",
@@ -98,7 +103,8 @@
 			"text": "Dynamo",
 			"desc": "Produire 1M énergie dans la semaine",
 			"objective": { "type": "energy_produced", "count": 1000000 },
-			"reward": { "type": "orbits", "amount": 20 }
+			"reward": { "type": "orbits", "amount": 20 },
+			"scale_with_prestige": true
 		},
 		{
 			"id": "weekly_prestige_2",

@@ -118,6 +118,26 @@ func _on_mining_tapped(_tech_gained: float) -> void:
 	_asteroid_tween.tween_property(asteroid_btn, "modulate", Color(1.0, 1.0, 1.0), 0.15)
 	# Tap particles burst
 	_emit_tap_particles()
+	# Floating "+N 🔧" at tap point
+	_show_floating_text(_tech_gained)
+
+func _show_floating_text(amount: float) -> void:
+	var lbl := Label.new()
+	lbl.text = "+" + NumberFormatter.format(amount) + " 🔧"
+	var buffs: Dictionary = GameManager.events.get_active_buffs()
+	if buffs.has("tap_x3"):
+		lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	else:
+		lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
+	lbl.add_theme_font_size_override("font_size", 32)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.position = asteroid_btn.global_position + asteroid_btn.size / 2.0 - Vector2(60, 20)
+	add_child(lbl)
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(lbl, "position:y", lbl.position.y - 60.0, 0.7).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(lbl, "modulate:a", 0.0, 0.3).set_delay(0.4)
+	tw.chain().tween_callback(lbl.queue_free)
 
 func _emit_tap_particles() -> void:
 	if not _tap_particles:
@@ -158,7 +178,7 @@ func _build_quest_badge() -> void:
 	_quest_badge = Label.new()
 	_quest_badge.name = "QuestBadge"
 	_quest_badge.add_theme_font_size_override("font_size", 22)
-	_quest_badge.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+	_quest_badge.add_theme_color_override("font_color", Color(1.0, 0.65, 0.0))
 	_quest_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_quest_badge.visible = false
 	tab_quests_btn.add_child(_quest_badge)
@@ -175,6 +195,10 @@ func _build_buy_mode_toggle() -> void:
 	_buy_mode_btn.add_theme_font_size_override("font_size", 30)
 	_buy_mode_btn.text = "x1"
 	_buy_mode_btn.pressed.connect(_on_buy_mode_toggle)
+	# Add to ModulesVBox wrapper (sticky, above ScrollContainer)
+	var modules_vbox: VBoxContainer = modules_container.get_parent().get_parent()
+	modules_vbox.add_child(_buy_mode_btn)
+	modules_vbox.move_child(_buy_mode_btn, 0)
 
 func _on_buy_mode_toggle() -> void:
 	_buy_mode_index = (_buy_mode_index + 1) % BUY_MODES.size()
@@ -187,14 +211,8 @@ func _get_buy_amount() -> int:
 
 func _build_module_list() -> void:
 	for child in modules_container.get_children():
-		if child == _buy_mode_btn:
-			modules_container.remove_child(child)
-		else:
-			child.queue_free()
+		child.queue_free()
 	_module_buttons.clear()
-
-	# Toggle button as first child
-	modules_container.add_child(_buy_mode_btn)
 
 	for module_id in GameManager.modules_data:
 		var row := _create_module_row(module_id)
@@ -694,8 +712,7 @@ func _build_quests_list() -> void:
 
 func _create_quest_row(quest: Dictionary, _category: String) -> PanelContainer:
 	var qid: String = quest.get("id", "")
-	var obj: Dictionary = quest.get("objective", {})
-	var target: int = int(obj.get("count", 1))
+	var target: int = GameManager.quests._get_scaled_target(quest)
 	var progress: int = GameManager.quests.get_progress(qid)
 	var claimed: bool = GameManager.quests.is_claimed(qid)
 	var completable: bool = GameManager.quests.is_completable(qid)
@@ -752,7 +769,7 @@ func _create_quest_row(quest: Dictionary, _category: String) -> PanelContainer:
 	# Reward + Claim button
 	var reward: Dictionary = quest.get("reward", {})
 	var reward_type: String = reward.get("type", "")
-	var reward_amount: int = int(reward.get("amount", 0))
+	var reward_amount: int = GameManager.quests._get_scaled_reward_amount(quest)
 	var reward_icon := "⚡" if reward_type == "energy" else ("🔧" if reward_type == "tech" else "⭐")
 
 	if completable:
