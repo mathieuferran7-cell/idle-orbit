@@ -160,7 +160,7 @@ func _on_last_stand(waves: int) -> void:
 			var prev: int = _daily_progress.get(qid, 0)
 			if waves > prev:
 				_daily_progress[qid] = waves
-				var target: int = int(obj.get("count", 1))
+				var target: int = get_scaled_target(quest)
 				EventBus.quest_progress.emit(qid, mini(waves, target), target)
 				if waves >= target and prev < target:
 					EventBus.quest_completed.emit(qid)

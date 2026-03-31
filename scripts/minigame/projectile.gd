@@ -27,6 +27,8 @@ func _ready() -> void:
 	_screen_size = get_viewport().get_visible_rect().size
 
 func _process(delta: float) -> void:
+	if _screen_size == Vector2.ZERO:
+		_screen_size = get_viewport().get_visible_rect().size
 	position += direction * speed * delta
 	_lifetime -= delta
 	if _lifetime <= 0.0 or position.x < -100 or position.x > _screen_size.x + 100 or position.y < -100 or position.y > _screen_size.y + 100:

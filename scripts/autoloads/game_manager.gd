@@ -276,6 +276,7 @@ func complete_prestige_with_bonus(waves_survived: int) -> void:
 		research.set_level("auto_tap", 1)
 	events.reset()
 	achievements.reset()
+	achievements.set_initialized(true)
 	quests.reset()
 	_in_minigame = false
 	_return_to_prestige_tab = true
@@ -335,6 +336,7 @@ func full_reset() -> void:
 	research.setup(research.data)
 	prestige.reset()
 	achievements.reset()
+	achievements.set_initialized(true)
 	quests.reset()
 	EventBus.game_ready.emit()
 
