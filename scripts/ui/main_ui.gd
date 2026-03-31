@@ -20,6 +20,7 @@ var _offline_popup: Control = null
 var _event_popup: Control = null
 var _buff_label: Label = null
 var _buy_mode_btn: Button = null
+var _tap_particles: CPUParticles2D = null
 const BUY_MODES := [1, 10, 25, 0]
 var _buy_mode_index: int = 0
 
@@ -67,6 +68,7 @@ func _show_modules_tab() -> void:
 	tab_modules_btn.disabled = true
 	tab_research_btn.disabled = false
 	tab_prestige_btn.disabled = false
+	_fade_in_panel(modules_panel)
 
 func _show_research_tab() -> void:
 	modules_panel.visible = false
@@ -75,6 +77,7 @@ func _show_research_tab() -> void:
 	tab_modules_btn.disabled = false
 	tab_research_btn.disabled = true
 	tab_prestige_btn.disabled = false
+	_fade_in_panel(research_panel)
 
 func _show_prestige_tab() -> void:
 	modules_panel.visible = false
@@ -83,6 +86,12 @@ func _show_prestige_tab() -> void:
 	tab_modules_btn.disabled = false
 	tab_research_btn.disabled = false
 	tab_prestige_btn.disabled = true
+	_fade_in_panel(prestige_panel)
+
+func _fade_in_panel(panel: Control) -> void:
+	panel.modulate = Color(1, 1, 1, 0)
+	var tw := create_tween()
+	tw.tween_property(panel, "modulate", Color(1, 1, 1, 1), 0.15)
 
 func _on_asteroid_tapped() -> void:
 	mining_manager.tap()
@@ -99,6 +108,29 @@ func _on_mining_tapped(_tech_gained: float) -> void:
 		asteroid_btn, "modulate", Color(1.4, 1.2, 0.6), 0.06
 	)
 	_asteroid_tween.tween_property(asteroid_btn, "modulate", Color(1.0, 1.0, 1.0), 0.15)
+	# Tap particles burst
+	_emit_tap_particles()
+
+func _emit_tap_particles() -> void:
+	if not _tap_particles:
+		_tap_particles = CPUParticles2D.new()
+		_tap_particles.name = "TapParticles"
+		_tap_particles.emitting = false
+		_tap_particles.one_shot = true
+		_tap_particles.amount = 12
+		_tap_particles.lifetime = 0.5
+		_tap_particles.explosiveness = 1.0
+		_tap_particles.direction = Vector2(0, -1)
+		_tap_particles.spread = 60.0
+		_tap_particles.initial_velocity_min = 80.0
+		_tap_particles.initial_velocity_max = 200.0
+		_tap_particles.gravity = Vector2(0, 120)
+		_tap_particles.scale_amount_min = 2.0
+		_tap_particles.scale_amount_max = 4.0
+		_tap_particles.color = Color(1.0, 0.85, 0.3, 0.9)
+		asteroid_btn.add_child(_tap_particles)
+	_tap_particles.position = asteroid_btn.size / 2.0
+	_tap_particles.restart()
 
 func _build_buff_label() -> void:
 	if _buff_label and is_instance_valid(_buff_label):
@@ -133,7 +165,10 @@ func _get_buy_amount() -> int:
 
 func _build_module_list() -> void:
 	for child in modules_container.get_children():
-		child.queue_free()
+		if child == _buy_mode_btn:
+			modules_container.remove_child(child)
+		else:
+			child.queue_free()
 	_module_buttons.clear()
 
 	# Toggle button as first child
@@ -211,6 +246,12 @@ func _on_resource_changed(_type: String, _amount: float, _total: float) -> void:
 
 func _on_module_purchased(_module_id: String, _count: int) -> void:
 	_refresh_all()
+	# Flash the purchased module row
+	var row: PanelContainer = _module_buttons.get(_module_id)
+	if row:
+		var tw := create_tween()
+		tw.tween_property(row, "modulate", Color(0.5, 1.0, 0.5), 0.08)
+		tw.tween_property(row, "modulate", Color(1, 1, 1), 0.2)
 
 func _on_module_unlocked(_module_id: String) -> void:
 	_build_module_list()

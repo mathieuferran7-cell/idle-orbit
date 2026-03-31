@@ -1,9 +1,13 @@
-[gd_scene load_steps=5 format=3 uid="uid://main_scene"]
+[gd_scene load_steps=7 format=3 uid="uid://main_scene"]
 
 [ext_resource type="Script" path="res://scripts/ui/main_ui.gd" id="1_main_ui"]
 [ext_resource type="Script" path="res://scripts/core/mining_manager.gd" id="2_mining"]
 [ext_resource type="Script" path="res://scripts/ui/research_ui.gd" id="3_research_ui"]
 [ext_resource type="Script" path="res://scripts/ui/prestige_ui.gd" id="4_prestige_ui"]
+[ext_resource type="Shader" path="res://shaders/starfield.gdshader" id="5_starfield"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_starfield"]
+shader = ExtResource("5_starfield")
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -22,7 +26,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.06, 0.06, 0.12, 1)
+material = SubResource("ShaderMaterial_starfield")
+color = Color(1, 1, 1, 1)
 
 [node name="RootVBox" type="VBoxContainer" parent="."]
 layout_mode = 1

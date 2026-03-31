@@ -26,6 +26,8 @@ var _enemies_node: Node2D
 var _turrets_node: Node2D
 var _projectiles_node: Node2D
 var _shockwaves_node: Node2D
+var _starfield_bg: ColorRect
+var _station_glow: ColorRect
 var _hud: CanvasLayer
 var _hp_label: Label
 var _wave_label: Label
@@ -46,6 +48,11 @@ func _ready() -> void:
 	var hp_per: int = int(station_data.get("hp_per_energy_module", 2))
 	_station_max_hp = base_hp + _params.get("total_energy_modules", 0) * hp_per
 	_station_hp = _station_max_hp
+
+	# Starfield background
+	_create_starfield_bg()
+	# Station glow
+	_create_station_glow()
 
 	# Containers
 	_enemies_node = Node2D.new()
@@ -69,6 +76,66 @@ func _ready() -> void:
 	_state = State.COUNTDOWN
 	_timer = 3.0
 	_update_center_label("PREPAREZ-VOUS")
+
+func _create_starfield_bg() -> void:
+	var shader := load("res://shaders/starfield.gdshader") as Shader
+	if not shader:
+		return
+	_starfield_bg = ColorRect.new()
+	_starfield_bg.name = "StarfieldBG"
+	_starfield_bg.position = Vector2.ZERO
+	_starfield_bg.size = Vector2(SCREEN_W, SCREEN_H)
+	_starfield_bg.z_index = -10
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	_starfield_bg.material = mat
+	add_child(_starfield_bg)
+
+func _create_station_glow() -> void:
+	var shader := load("res://shaders/station_glow.gdshader") as Shader
+	if not shader:
+		return
+	var station_radius: float = float(_data.get("station", {}).get("radius", 60))
+	var glow_size: float = station_radius * 5.0
+	_station_glow = ColorRect.new()
+	_station_glow.name = "StationGlow"
+	_station_glow.position = CENTER - Vector2(glow_size, glow_size) / 2.0
+	_station_glow.size = Vector2(glow_size, glow_size)
+	_station_glow.z_index = -1
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	mat.set_shader_parameter("radius", 0.35)
+	mat.set_shader_parameter("glow_intensity", 0.6)
+	_station_glow.material = mat
+	add_child(_station_glow)
+
+func _spawn_death_particles(pos: Vector2, enemy_color: Color) -> void:
+	var particles := CPUParticles2D.new()
+	particles.position = pos
+	particles.emitting = true
+	particles.one_shot = true
+	particles.amount = 10
+	particles.lifetime = 0.4
+	particles.explosiveness = 1.0
+	particles.direction = Vector2.ZERO
+	particles.spread = 180.0
+	particles.initial_velocity_min = 100.0
+	particles.initial_velocity_max = 250.0
+	particles.gravity = Vector2.ZERO
+	particles.scale_amount_min = 2.0
+	particles.scale_amount_max = 4.0
+	particles.scale_amount_curve = _create_fadeout_curve()
+	particles.color = enemy_color.lightened(0.2)
+	add_child(particles)
+	# Auto-cleanup after particles finish
+	get_tree().create_timer(0.6).timeout.connect(particles.queue_free)
+
+func _create_fadeout_curve() -> Curve:
+	var curve := Curve.new()
+	curve.add_point(Vector2(0.0, 1.0))
+	curve.add_point(Vector2(0.7, 0.6))
+	curve.add_point(Vector2(1.0, 0.0))
+	return curve
 
 func _create_turrets() -> void:
 	var turret_count := maxi(1, _params.get("total_tech_modules", 0))
@@ -152,7 +219,7 @@ func _spawn_enemy() -> void:
 	var enemy := MinigameEnemy.new()
 	enemy.setup(type_data, spawn_pos, CENTER)
 	enemy.reached_station.connect(_on_station_hit)
-	enemy.died.connect(_on_enemy_died)
+	enemy.died.connect(_on_enemy_died.bind(enemy))
 	_enemies_node.add_child(enemy)
 	_enemies_spawned += 1
 
@@ -180,8 +247,9 @@ func _on_station_hit(damage: int) -> void:
 		_station_hp = 0
 		_game_over()
 
-func _on_enemy_died() -> void:
-	pass
+func _on_enemy_died(enemy: MinigameEnemy) -> void:
+	if is_instance_valid(enemy):
+		_spawn_death_particles(enemy.position, enemy.color)
 
 func _game_over() -> void:
 	_state = State.GAME_OVER
@@ -238,9 +306,6 @@ func _try_swipe(end_pos: Vector2) -> void:
 # ── Drawing ──────────────────────────────────────────────────────────────────
 
 func _draw() -> void:
-	# Background
-	draw_rect(Rect2(0, 0, SCREEN_W, SCREEN_H), Color(0.04, 0.04, 0.1))
-
 	# Station
 	var station_radius: float = float(_data.get("station", {}).get("radius", 60))
 	draw_circle(CENTER, station_radius, Color(0.3, 0.35, 0.5))
@@ -248,10 +313,11 @@ func _draw() -> void:
 	draw_arc(CENTER, station_radius * 0.7, 0, TAU, 24, Color(0.5, 0.7, 1.0), 2.0)
 
 	# HP flash when damaged
-	if _station_hp < _station_max_hp:
-		var hp_ratio := float(_station_hp) / float(_station_max_hp)
-		if hp_ratio < 0.3:
-			draw_circle(CENTER, station_radius + 5, Color(1.0, 0.2, 0.1, 0.15))
+	var hp_ratio := float(_station_hp) / float(_station_max_hp)
+	if _station_glow and _station_glow.material:
+		(_station_glow.material as ShaderMaterial).set_shader_parameter("hp_ratio", hp_ratio)
+	if hp_ratio < 0.3:
+		draw_circle(CENTER, station_radius + 5, Color(1.0, 0.2, 0.1, 0.15))
 
 # ── HUD ──────────────────────────────────────────────────────────────────────
 
