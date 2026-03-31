@@ -1,7 +1,7 @@
 {
 	"tick_interval": 0.25,
 	"starting_energy": 10.0,
-	"offline_max_seconds": 3600,
+	"offline_max_seconds": 14400,
 	"offline_energy_ratio": 0.25,
 	"offline_tech_ratio": 0.25,
 	"offline_min_seconds": 60,

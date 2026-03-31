@@ -125,7 +125,7 @@ func get_module_cost(module_id: String) -> float:
 	return base_cost * pow(growth, count) * research.get_cost_multiplier() * prestige.get_module_discount()
 
 func can_afford_module(module_id: String) -> bool:
-	return energy >= get_module_cost(module_id)
+	return energy >= get_module_cost(module_id) and tech >= get_module_tech_cost(module_id)
 
 func is_module_unlocked(module_id: String) -> bool:
 	var mod: Dictionary = modules_data.get(module_id, {})
@@ -138,14 +138,27 @@ func is_module_unlocked(module_id: String) -> bool:
 		return module_counts.get(req_module, 0) >= req_count
 	return true
 
+func get_module_tech_cost(module_id: String) -> float:
+	var mod: Dictionary = modules_data.get(module_id, {})
+	var base: float = mod.get("tech_cost", 0.0)
+	if base <= 0.0:
+		return 0.0
+	var growth: float = mod.get("tech_cost_growth", 1.15)
+	var count: int = module_counts.get(module_id, 0)
+	return base * pow(growth, count)
+
 func buy_module(module_id: String) -> bool:
 	if not is_module_unlocked(module_id):
 		return false
 	var cost := get_module_cost(module_id)
-	if energy < cost:
+	var tech_cost := get_module_tech_cost(module_id)
+	if energy < cost or tech < tech_cost:
 		return false
 	energy -= cost
 	EventBus.resource_changed.emit("energy", -cost, energy)
+	if tech_cost > 0.0:
+		tech -= tech_cost
+		EventBus.resource_changed.emit("tech", -tech_cost, tech)
 	module_counts[module_id] = module_counts.get(module_id, 0) + 1
 	EventBus.module_purchased.emit(module_id, module_counts[module_id])
 	_check_unlocks()
@@ -240,7 +253,7 @@ func start_prestige_minigame() -> void:
 	get_tree().change_scene_to_packed(scene)
 
 func quick_prestige() -> void:
-	_pre_prestige_orbits = prestige.get_pending_orbits()
+	_pre_prestige_orbits = int(prestige.get_pending_orbits() * 0.7)
 	complete_prestige_with_bonus(0)
 
 func get_minigame_params() -> Dictionary:

@@ -134,7 +134,8 @@ func apply_reward(reward: Dictionary) -> String:
 			GameManager.add_resource("tech", amount)
 			result_parts.append("+%s 🔧" % NumberFormatter.format(amount))
 		"orbits":
-			var amount: int = int(reward.get("amount", 0))
+			var base_amount: int = int(reward.get("amount", 0))
+			var amount: int = base_amount * (GameManager.prestige.prestige_count + 1)
 			GameManager.prestige.add_orbits(amount)
 			EventBus.resource_changed.emit("orbits", float(amount), float(GameManager.prestige.get_available_orbits()))
 			result_parts.append("+%d ⭐" % amount)

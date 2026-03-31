@@ -120,8 +120,8 @@
 		"name": "Accélérateur",
 		"tier": 5,
 		"per_level": 0.10,
-		"cost": 1000,
-		"cost_growth": 1.6,
+		"cost": 600,
+		"cost_growth": 1.5,
 		"max": 3,
 		"desc": "-10% seuil prestige/niv"
 	},
