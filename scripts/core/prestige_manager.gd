@@ -48,13 +48,28 @@ func get_talent_level(tid: String) -> int:
 func get_talent_max(tid: String) -> int:
 	return int(data.get(tid, {}).get("max", 0))
 
-func get_talent_cost(tid: String) -> int:
+func get_talent_base_cost(tid: String) -> int:
 	return int(data.get(tid, {}).get("cost", 999))
+
+func get_talent_cost_growth(tid: String) -> float:
+	return float(data.get(tid, {}).get("cost_growth", 1.5))
+
+func get_talent_cost(tid: String) -> int:
+	var base := get_talent_base_cost(tid)
+	var growth := get_talent_cost_growth(tid)
+	var level := get_talent_level(tid)
+	return int(base * pow(growth, level))
+
+func get_talent_cost_at_level(tid: String, level: int) -> int:
+	var base := get_talent_base_cost(tid)
+	var growth := get_talent_cost_growth(tid)
+	return int(base * pow(growth, level))
 
 func get_spent_orbits() -> int:
 	var total := 0
 	for tid in talent_levels:
-		total += talent_levels[tid] * get_talent_cost(tid)
+		for lvl in talent_levels[tid]:
+			total += get_talent_cost_at_level(tid, lvl)
 	return total
 
 func get_available_orbits() -> int:

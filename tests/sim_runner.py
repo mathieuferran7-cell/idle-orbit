@@ -110,26 +110,26 @@ class Research:
 # ── Prestige engine ──────────────────────────────────────────────────────────
 
 PRESTIGE_TALENTS = {
-    # Tier 1 — cheap, impactful
-    "energy_plus":    {"name": "Energie+",     "effect": "energy_mult",     "per_level": 0.15, "cost": 5,   "max": 5},
-    "tech_plus":      {"name": "Tech+",        "effect": "tech_tap_mult",   "per_level": 0.15, "cost": 5,   "max": 5},
-    "start_plus":     {"name": "Depart+",      "effect": "starting_energy", "per_level": 30.0, "cost": 4,   "max": 5},
-    # Tier 2 — mid cost
-    "research_minus": {"name": "Recherche-",   "effect": "research_disc",   "per_level": 0.10, "cost": 12,  "max": 5},
-    "speed_plus":     {"name": "Vitesse+",     "effect": "global_speed",    "per_level": 0.08, "cost": 15,  "max": 5},
-    "auto_start":     {"name": "Drone Init",   "effect": "auto_tap_start",  "per_level": 1.0,  "cost": 20,  "max": 1},
-    # Tier 3 — expensive, powerful
-    "energy_plus2":   {"name": "Energie++",    "effect": "energy_mult",     "per_level": 0.25, "cost": 30,  "max": 3},
-    "offline_plus":   {"name": "Offline+",     "effect": "offline_mult",    "per_level": 0.20, "cost": 25,  "max": 3},
-    "module_discount":{"name": "Modules-",     "effect": "module_disc",     "per_level": 0.08, "cost": 20,  "max": 5},
-    # Tier 4 — endgame
-    "orbit_bonus":    {"name": "Orbit+",       "effect": "orbit_mult",      "per_level": 0.15, "cost": 50,  "max": 3},
-    "mega_speed":     {"name": "Warp",         "effect": "global_speed",    "per_level": 0.15, "cost": 80,  "max": 2},
-    # Tier 5 — deep endgame (orbit sink)
-    "module_cost_reduction": {"name": "Ingenierie", "effect": "module_disc", "per_level": 0.06, "cost": 500, "max": 5},
-    "energy_plus3":   {"name": "Energie+++",   "effect": "energy_mult",     "per_level": 0.30, "cost": 800, "max": 3},
-    "prestige_accelerator": {"name": "Accelerateur", "effect": "threshold_disc", "per_level": 0.10, "cost": 1000, "max": 3},
-    "deep_mining":    {"name": "Forage Profond", "effect": "tech_tap_mult", "per_level": 0.20, "cost": 1500, "max": 3},
+    # Tier 1 — cheap, impactful (growth 1.4)
+    "energy_plus":    {"name": "Energie+",     "effect": "energy_mult",     "per_level": 0.15, "cost": 5,   "cost_growth": 1.4, "max": 5},
+    "tech_plus":      {"name": "Tech+",        "effect": "tech_tap_mult",   "per_level": 0.15, "cost": 5,   "cost_growth": 1.4, "max": 5},
+    "start_plus":     {"name": "Depart+",      "effect": "starting_energy", "per_level": 30.0, "cost": 4,   "cost_growth": 1.4, "max": 5},
+    # Tier 2 — mid cost (growth 1.4)
+    "research_minus": {"name": "Recherche-",   "effect": "research_disc",   "per_level": 0.10, "cost": 12,  "cost_growth": 1.4, "max": 5},
+    "speed_plus":     {"name": "Vitesse+",     "effect": "global_speed",    "per_level": 0.08, "cost": 15,  "cost_growth": 1.4, "max": 5},
+    "auto_start":     {"name": "Drone Init",   "effect": "auto_tap_start",  "per_level": 1.0,  "cost": 20,  "cost_growth": 1.0, "max": 1},
+    # Tier 3 — expensive, powerful (growth 1.5)
+    "energy_plus2":   {"name": "Energie++",    "effect": "energy_mult",     "per_level": 0.25, "cost": 30,  "cost_growth": 1.5, "max": 3},
+    "offline_plus":   {"name": "Offline+",     "effect": "offline_mult",    "per_level": 0.20, "cost": 25,  "cost_growth": 1.5, "max": 3},
+    "module_discount":{"name": "Modules-",     "effect": "module_disc",     "per_level": 0.08, "cost": 20,  "cost_growth": 1.5, "max": 5},
+    # Tier 4 — endgame (growth 1.5)
+    "orbit_bonus":    {"name": "Orbit+",       "effect": "orbit_mult",      "per_level": 0.15, "cost": 50,  "cost_growth": 1.5, "max": 3},
+    "mega_speed":     {"name": "Warp",         "effect": "global_speed",    "per_level": 0.15, "cost": 80,  "cost_growth": 1.5, "max": 2},
+    # Tier 5 — deep endgame (growth 1.6)
+    "module_cost_reduction": {"name": "Ingenierie", "effect": "module_disc", "per_level": 0.06, "cost": 500, "cost_growth": 1.6, "max": 5},
+    "energy_plus3":   {"name": "Energie+++",   "effect": "energy_mult",     "per_level": 0.30, "cost": 800, "cost_growth": 1.6, "max": 3},
+    "prestige_accelerator": {"name": "Accelerateur", "effect": "threshold_disc", "per_level": 0.10, "cost": 1000, "cost_growth": 1.6, "max": 3},
+    "deep_mining":    {"name": "Forage Profond", "effect": "tech_tap_mult", "per_level": 0.20, "cost": 1500, "cost_growth": 1.6, "max": 3},
 }
 
 # Priority: cheap first, then scaling, then endgame, then tier 5
@@ -161,9 +161,23 @@ class Prestige:
     def add_orbits(self, amount):
         self.total_orbits += amount
 
+    def get_talent_cost(self, tid):
+        """Cost of next level: base * growth^current_level."""
+        talent = PRESTIGE_TALENTS[tid]
+        base = talent["cost"]
+        growth = talent.get("cost_growth", 1.5)
+        level = self.talents.get(tid, 0)
+        return int(base * math.pow(growth, level))
+
+    def get_talent_cost_at_level(self, tid, level):
+        talent = PRESTIGE_TALENTS[tid]
+        base = talent["cost"]
+        growth = talent.get("cost_growth", 1.5)
+        return int(base * math.pow(growth, level))
+
     def get_available_orbits(self):
         spent = sum(
-            self.talents[tid] * PRESTIGE_TALENTS[tid]["cost"]
+            sum(self.get_talent_cost_at_level(tid, lvl) for lvl in range(self.talents[tid]))
             for tid in self.talents
         )
         return self.total_orbits - spent
@@ -174,7 +188,7 @@ class Prestige:
             bought = False
             for tid in TALENT_PRIORITY:
                 talent = PRESTIGE_TALENTS[tid]
-                if self.talents[tid] < talent["max"] and self.get_available_orbits() >= talent["cost"]:
+                if self.talents[tid] < talent["max"] and self.get_available_orbits() >= self.get_talent_cost(tid):
                     self.talents[tid] += 1
                     bought = True
                     break

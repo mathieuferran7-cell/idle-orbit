@@ -4,6 +4,7 @@
 		"tier": 1,
 		"per_level": 0.15,
 		"cost": 5,
+		"cost_growth": 1.4,
 		"max": 5,
 		"desc": "+15% production énergie/niv"
 	},
@@ -12,6 +13,7 @@
 		"tier": 1,
 		"per_level": 0.15,
 		"cost": 5,
+		"cost_growth": 1.4,
 		"max": 5,
 		"desc": "+15% tech/tap par niv"
 	},
@@ -20,6 +22,7 @@
 		"tier": 1,
 		"per_level": 30,
 		"cost": 4,
+		"cost_growth": 1.4,
 		"max": 5,
 		"desc": "+30 énergie de départ/niv"
 	},
@@ -28,6 +31,7 @@
 		"tier": 2,
 		"per_level": 0.10,
 		"cost": 12,
+		"cost_growth": 1.4,
 		"max": 5,
 		"desc": "-10% coût recherche/niv"
 	},
@@ -36,6 +40,7 @@
 		"tier": 2,
 		"per_level": 0.08,
 		"cost": 15,
+		"cost_growth": 1.4,
 		"max": 5,
 		"desc": "+8% vitesse globale/niv"
 	},
@@ -44,6 +49,7 @@
 		"tier": 2,
 		"per_level": 1,
 		"cost": 20,
+		"cost_growth": 1.0,
 		"max": 1,
 		"desc": "Commence avec auto-tap"
 	},
@@ -52,6 +58,7 @@
 		"tier": 3,
 		"per_level": 0.25,
 		"cost": 30,
+		"cost_growth": 1.5,
 		"max": 3,
 		"desc": "+25% production énergie/niv"
 	},
@@ -60,6 +67,7 @@
 		"tier": 3,
 		"per_level": 0.20,
 		"cost": 25,
+		"cost_growth": 1.5,
 		"max": 3,
 		"desc": "+20% gains offline/niv"
 	},
@@ -68,6 +76,7 @@
 		"tier": 3,
 		"per_level": 0.08,
 		"cost": 20,
+		"cost_growth": 1.5,
 		"max": 5,
 		"desc": "-8% coût modules/niv"
 	},
@@ -76,6 +85,7 @@
 		"tier": 4,
 		"per_level": 0.15,
 		"cost": 50,
+		"cost_growth": 1.5,
 		"max": 3,
 		"desc": "+15% Orbits gagnés/niv"
 	},
@@ -84,6 +94,7 @@
 		"tier": 4,
 		"per_level": 0.15,
 		"cost": 80,
+		"cost_growth": 1.5,
 		"max": 2,
 		"desc": "+15% vitesse globale/niv"
 	},
@@ -92,6 +103,7 @@
 		"tier": 5,
 		"per_level": 0.06,
 		"cost": 500,
+		"cost_growth": 1.6,
 		"max": 5,
 		"desc": "-6% coût base modules/niv"
 	},
@@ -100,6 +112,7 @@
 		"tier": 5,
 		"per_level": 0.30,
 		"cost": 800,
+		"cost_growth": 1.6,
 		"max": 3,
 		"desc": "+30% production énergie/niv"
 	},
@@ -108,6 +121,7 @@
 		"tier": 5,
 		"per_level": 0.10,
 		"cost": 1000,
+		"cost_growth": 1.6,
 		"max": 3,
 		"desc": "-10% seuil prestige/niv"
 	},
@@ -116,6 +130,7 @@
 		"tier": 5,
 		"per_level": 0.20,
 		"cost": 1500,
+		"cost_growth": 1.6,
 		"max": 3,
 		"desc": "+20% tech par tap/niv"
 	}
