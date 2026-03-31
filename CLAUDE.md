@@ -6,12 +6,12 @@
 - **Concept** : Space station idle — Build, automate, conquer the stars
 - **Genre** : Idle/Incremental + active mining loop + prestige loop + mini-jeu Last Stand + événements FTL
 - **Cible** : Android-first (Godot 4.6)
-- **Play Store** : test fermé actif (Grimoire Culinaire dev account), v1.2.0 (code 16)
+- **Play Store** : test fermé actif (Grimoire Culinaire dev account), v1.3.0 (code 18)
 - **Ce projet est un reboot de Little Orbit v1**
 
 ## Stack technique
 - **Engine** : Godot 4.6.1 / GDScript
-- **Save** : JSON versionné (champ `save_version` obligatoire, commence à 1)
+- **Save** : JSON versionné (champ `save_version` obligatoire, version actuelle 2)
 - **Audio** : 100% procédural (11 SFX) — zéro fichiers .ogg/.wav externes
 - **Build** : Android AAB signé (keystore: idleorbit-release.keystore)
 - **Export** : headless Godot + jarsigner manuel
@@ -33,20 +33,21 @@
 scripts/
 ├── autoloads/      # Singletons globaux (project settings → AutoLoad)
 │   ├── game_manager.gd     # Logique principale, facades (buy_talent, upgrade_research, claim_quest), prestige flow
-│   ├── save_manager.gd     # Save/load JSON versionné
+│   ├── save_manager.gd     # Save/load JSON versionné (version 2)
 │   ├── event_bus.gd        # 18 signaux globaux
 │   ├── audio_manager.gd    # 11 SFX procéduraux
-│   └── ad_manager.gd       # AdMob rewarded + banner, fallback desktop
+│   ├── ad_manager.gd       # AdMob rewarded + banner, fallback desktop
+│   └── iap_manager.gd      # IAP stub (No Ads + Starter Pack), prêt pour plugin Google Play Billing
 ├── core/           # Systèmes de jeu
-│   ├── prestige_manager.gd # Orbits, 15 talents permanents (5 tiers), coûts incrémentaux, seuils x3 avec réduction, add_orbits()
+│   ├── prestige_manager.gd # Orbits, 15 talents (5 tiers), coûts incrémentaux, seuils x3, Orbital Memory Weave (run modifiers)
 │   ├── research_manager.gd # 6 noeuds, get_effective_cost(), set_level(), all_maxed()
 │   ├── mining_manager.gd   # Loop mining actif + auto-tap + module scaling
-│   ├── event_manager.gd    # Timer aléatoire, 7 events FTL, 5 buffs, 3 milestones, get_state/load_state
+│   ├── event_manager.gd    # Timer aléatoire, 7 events FTL + 3 auctions, 5 buffs, 3 milestones, auction timer 90min
 │   ├── achievement_manager.gd # 31 achievements, stats persistantes, signal-driven, check_all()
 │   └── quest_manager.gd    # 12 daily pool (3/jour) + 5 weekly, scaling prestige, reset quotidien/hebdo
 ├── minigame/       # Mini-jeu Last Stand (transition prestige, optionnel)
 │   ├── last_stand.gd       # Controller : state machine, viewport dynamique, starfield + glow shaders
-│   ├── enemy.gd            # Area2D : mouvement, HP, 3 types (small/fast/big), death particles
+│   ├── enemy.gd            # Area2D : mouvement, HP, 4 types (small/fast/big/boss), death particles, split mechanic
 │   ├── turret.gd           # Auto-target nearest, fire projectile
 │   ├── projectile.gd       # Bullet linéaire, collision Area2D (radius 5px aligné), trail particles
 │   └── shockwave.gd        # Cône de choc expandable (swipe), hit detection manuelle
@@ -68,8 +69,9 @@ data/                       # SOURCE DE VÉRITÉ pour toute la balance
 ├── balance.json            # 15 constantes globales (tick, offline, prestige, mining, events)
 ├── prestige.json           # 15 talents sur 5 tiers (coûts incrémentaux base * growth^level)
 ├── research.json           # 6 noeuds de recherche
-├── events.json             # 7 événements FTL avec choix + récompenses
-├── minigame.json           # Balance Last Stand (station, tourelles, ennemis, 10 vagues + overflow)
+├── events.json             # 7 événements FTL + 3 auctions (bid tech) avec choix + récompenses
+├── minigame.json           # Balance Last Stand (station, tourelles, ennemis dont boss, 10 vagues + overflow)
+├── iap.json                # Produits IAP (no_ads, starter_pack)
 ├── ads.json                # IDs AdMob (app_id, rewarded_id, banner_id)
 ├── achievements.json       # 31 achievements (conditions, récompenses)
 └── quests.json             # 12 quêtes daily pool + 5 weekly, scaling prestige
@@ -134,14 +136,16 @@ PRESTIGE (2 options)
 - Swipe = onde de choc en cône 90°, cooldown 1.5s, damage 3
 - Station HP = base_hp + modules_énergie * hp_per_module
 - 10 vagues définies + overflow infini (+3 ennemis/vague, -0.05s interval)
-- Types : small (1HP, lent), fast (1HP, rapide), big (3HP, lent)
+- Types : small (1HP, lent), fast (1HP, rapide), big (3HP, lent), boss (8HP, split en 2 small à la mort)
+- Boss spawn : vagues 5, 10, et toutes les 5 overflow
 - Game over → résultats (orbits base × bonus × vagues) → Continue pub OU Prestige
 - Transition : `change_scene_to_packed` aller-retour, autoloads persistent, _in_minigame flag pause production
 
 ## Événements FTL
 - Timer aléatoire (5-10 min) + 3 milestones (premier tier 2, première recherche max, premier prestige)
 - 7 événements narratifs spatiaux avec 3 choix (2 gratuits + 1 premium pub rewarded)
-- Récompenses : énergie, tech, orbits, buffs temporaires, modules gratuits
+- 3 événements "auction" (Stellar Drift Auctions) — timer séparé 90min, bid tech pour rewards
+- Récompenses : énergie, tech, orbits (scalés × prestige_count+1), buffs temporaires, modules gratuits
 - Scaling proportionnel à sqrt(total_energy_produced)
 - 5 buffs : energy_x2, tech_x2, speed_x2, tap_x3, research_discount
 - Buffs différents se cumulent, même buff additionne les durées
@@ -191,8 +195,24 @@ PRESTIGE (2 options)
 - **Keystore** : `%APPDATA%\Godot\keystores\idleorbit-release.keystore` (alias: idleorbit, pass: OrbitRelease2026!)
 - **Export** : Godot headless `--export-release "Android"` → jarsigner → idle-orbit-signed.aab
 - **Config** : arm64-v8a, SDK 24-35, portrait forcé (`window/handheld/orientation=1`)
-- **Version actuelle** : code 16, name 1.2.0
+- **Version actuelle** : code 18, name 1.3.0
 - **Manifeste release** : android/build/src/release/AndroidManifest.xml (INTERNET permission, portrait, AdMob App ID auto-injecté par plugin)
+
+## Orbital Memory Weave
+- À chaque prestige, 3 conditions évaluées sur le run précédent :
+  - Run < 45min → next run tap damage x2 (`tap_bonus`)
+  - Last Stand waves >= 8 → next run station HP +25% (`hp_bonus`)
+  - Events >= 4 → next run event timer /2 (`event_speed`)
+- Modifiers affichés dans le header (label cyan sous les buffs)
+- Stockés dans `prestige_manager.run_modifiers`, sauvegardés, reset à chaque prestige
+
+## IAP (stub, prêt pour plugin)
+- **IAPManager** autoload avec purchase/restore/save/load
+- **Produits** : `data/iap.json` — No Ads (2.99€), Starter Pack (1.99€, 50 orbits + boost offline)
+- **Mode stub** : simule l'achat immédiat en debug, TODO pour Google Play Billing plugin
+- **No Ads** : flag `GameManager.no_ads`, bannière conditionnelle, persisté dans save v2
+- **Bouton** : "Supprimer les pubs" en bas de l'onglet Modules (caché si déjà acheté)
+- **Onboarding** : 3 tooltips contextuels (module → research → prestige), tutorial_step dans save
 
 ## Ce qu'on NE reproduit PAS (erreurs v1)
 - Pas de skins incrémentaux par niveau de station
@@ -202,13 +222,13 @@ PRESTIGE (2 options)
 - Pas de quêtes/missions au départ
 
 ## Mécaniques en attente (ne pas implémenter prématurément)
-- IAP (No Ads 1.99€, Starter Pack)
+- IAP réel Google Play (plugin Billing AAR — infra stub prête)
+- Push notification locale (offline cap atteint)
 - Cloud save
-- Localisation multilingue
+- Localisation multilingue (FR → EN minimum)
 - Visual polish passe 2 (sprites réels pour station, ennemis, modules)
 - Icône adaptative Android (foreground/background)
 - Permission AD_ID (fix plugin Poing)
+- 2ème layer prestige (Void Crystals / Dark Matter)
 - Artefacts / système de collection
 - Carte stellaire (exploration post-prestige)
-- Onboarding / tutoriel contextuel (3 étapes)
-- Contrats deep scan (objectifs par run)
