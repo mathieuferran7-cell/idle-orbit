@@ -6,7 +6,7 @@
 - **Concept** : Space station idle — Build, automate, conquer the stars
 - **Genre** : Idle/Incremental + active mining loop + prestige loop + mini-jeu Last Stand + événements FTL
 - **Cible** : Android-first (Godot 4.6)
-- **Play Store** : test fermé actif (Grimoire Culinaire dev account), v1.1.2 (code 14)
+- **Play Store** : test fermé actif (Grimoire Culinaire dev account), v1.1.3 (code 15)
 - **Ce projet est un reboot de Little Orbit v1**
 
 ## Stack technique
@@ -34,7 +34,7 @@ scripts/
 ├── autoloads/      # Singletons globaux (project settings → AutoLoad)
 │   ├── game_manager.gd     # Logique principale, facades (buy_talent, upgrade_research, claim_quest), prestige flow
 │   ├── save_manager.gd     # Save/load JSON versionné
-│   ├── event_bus.gd        # 19 signaux globaux
+│   ├── event_bus.gd        # 18 signaux globaux
 │   ├── audio_manager.gd    # 11 SFX procéduraux
 │   └── ad_manager.gd       # AdMob rewarded + banner, fallback desktop
 ├── core/           # Systèmes de jeu
@@ -92,7 +92,7 @@ tests/
 3. **Save versionné** — champ `save_version: int` obligatoire dans chaque save, migration gérée
 4. **Audio procédural** — tout en code GDScript, zéro import de fichiers audio
 5. **Source de vérité unique** — `data/` pour les valeurs, `constants.gd` pour les identifiants/enums uniquement
-6. **Signal-based** — passer par `EventBus` pour la communication inter-systèmes (19 signaux)
+6. **Signal-based** — passer par `EventBus` pour la communication inter-systèmes (18 signaux)
 7. **Autoloads pour les services** — GameManager, SaveManager, EventBus, AudioManager, AdManager en AutoLoad
 8. **Zéro logique métier dans les widgets UI** — passer par les facades GameManager (buy_talent, upgrade_research, buy_module)
 9. **Research UI : card.modulate only** — 3 états (BUYABLE=blanc, LOCKED=gris, MAXED=doré), jamais de couleur par label
@@ -191,7 +191,7 @@ PRESTIGE (2 options)
 - **Keystore** : `%APPDATA%\Godot\keystores\idleorbit-release.keystore` (alias: idleorbit, pass: OrbitRelease2026!)
 - **Export** : Godot headless `--export-release "Android"` → jarsigner → idle-orbit-signed.aab
 - **Config** : arm64-v8a, SDK 24-35, portrait forcé (`window/handheld/orientation=1`)
-- **Version actuelle** : code 14, name 1.1.2
+- **Version actuelle** : code 15, name 1.1.3
 - **Manifeste release** : android/build/src/release/AndroidManifest.xml (INTERNET permission, portrait, AdMob App ID auto-injecté par plugin)
 
 ## Ce qu'on NE reproduit PAS (erreurs v1)
