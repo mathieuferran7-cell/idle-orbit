@@ -3,9 +3,9 @@ extends Control
 # ── Layout ───────────────────────────────────────────────────────────────────
 const COL_CENTERS := [170.0, 540.0, 910.0]
 const ROW_START_Y := 30.0
-const ROW_HEIGHT := 220.0
+const ROW_HEIGHT := 225.0
 const CARD_W := 280.0
-const CARD_H := 130.0
+const CARD_H := 135.0
 
 # ── Colors — 3 states only ───────────────────────────────────────────────────
 const CARD_BUYABLE := Color.WHITE

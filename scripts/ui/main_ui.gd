@@ -27,6 +27,8 @@ var _quests_container: VBoxContainer = null
 var _quest_badge: Label = null
 const BUY_MODES := [1, 10, 25, 0]
 var _buy_mode_index: int = 0
+var _tutorial_timer: float = 0.0
+var _tutorial_tooltip: Control = null
 
 func _ready() -> void:
 	EventBus.game_ready.connect(_on_game_ready)
@@ -63,7 +65,8 @@ func _on_game_ready() -> void:
 	_build_quest_badge()
 	_refresh_all()
 	_update_quest_badge()
-	AdManager.show_banner()
+	if not GameManager.no_ads:
+		AdManager.show_banner()
 	# Retroactive check: mark already-met achievements without granting rewards
 	GameManager.achievements.set_suppress_rewards(true)
 	GameManager.achievements.check_all()
@@ -72,6 +75,8 @@ func _on_game_ready() -> void:
 		_show_prestige_tab()
 	else:
 		_show_modules_tab()
+	if GameManager.tutorial_step == 0:
+		call_deferred("_show_tutorial_step_0")
 
 func _show_modules_tab() -> void:
 	_set_tab(modules_panel)
@@ -92,6 +97,10 @@ func _set_tab(active: Control) -> void:
 	for i in panels.size():
 		panels[i].visible = (panels[i] == active)
 		buttons[i].disabled = (panels[i] == active)
+		if panels[i] == active:
+			buttons[i].add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		else:
+			buttons[i].add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
 	_fade_in_panel(active)
 
 func _fade_in_panel(panel: Control) -> void:
@@ -193,7 +202,7 @@ func _build_buy_mode_toggle() -> void:
 		return
 	_buy_mode_btn = Button.new()
 	_buy_mode_btn.name = "BuyModeBtn"
-	_buy_mode_btn.custom_minimum_size = Vector2(0, 70)
+	_buy_mode_btn.custom_minimum_size = Vector2(0, 132)
 	_buy_mode_btn.add_theme_font_size_override("font_size", 30)
 	_buy_mode_btn.text = "x1"
 	_buy_mode_btn.pressed.connect(_on_buy_mode_toggle)
@@ -287,6 +296,10 @@ func _on_resource_changed(_type: String, _amount: float, _total: float) -> void:
 	_refresh_all()
 
 func _on_module_purchased(_module_id: String, _count: int) -> void:
+	if GameManager.tutorial_step == 0:
+		GameManager.tutorial_step = 1
+		_dismiss_tooltip()
+		call_deferred("_show_tutorial_step_1")
 	_refresh_all()
 	# Flash the purchased module row
 	var row: PanelContainer = _module_buttons.get(_module_id)
@@ -455,7 +468,7 @@ func _build_offline_popup(gains: Dictionary) -> void:
 		no_lbl.text = "Aucune production active"
 		no_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		no_lbl.add_theme_font_size_override("font_size", 30)
-		no_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		no_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
 		vbox.add_child(no_lbl)
 
 	vbox.add_child(HSeparator.new())
@@ -751,7 +764,7 @@ func _create_quest_row(quest: Dictionary, _category: String) -> PanelContainer:
 	var desc_lbl := Label.new()
 	desc_lbl.text = quest.get("desc", "")
 	desc_lbl.add_theme_font_size_override("font_size", 22)
-	desc_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	desc_lbl.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75))
 	text_vbox.add_child(desc_lbl)
 
 	# Progress
@@ -777,7 +790,7 @@ func _create_quest_row(quest: Dictionary, _category: String) -> PanelContainer:
 	if completable:
 		var claim_btn := Button.new()
 		claim_btn.text = "%s %d" % [reward_icon, reward_amount]
-		claim_btn.custom_minimum_size = Vector2(160, 70)
+		claim_btn.custom_minimum_size = Vector2(160, 132)
 		claim_btn.add_theme_font_size_override("font_size", 26)
 		claim_btn.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
 		claim_btn.pressed.connect(_on_claim_quest.bind(qid))
@@ -786,7 +799,7 @@ func _create_quest_row(quest: Dictionary, _category: String) -> PanelContainer:
 		var reward_lbl := Label.new()
 		reward_lbl.text = "%s %d" % [reward_icon, reward_amount]
 		reward_lbl.add_theme_font_size_override("font_size", 24)
-		reward_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		reward_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
 		hbox.add_child(reward_lbl)
 
 	if claimed:
@@ -799,3 +812,95 @@ func _on_claim_quest(quest_id: String) -> void:
 		AudioManager.play_sfx("buy")
 		_build_quests_list()
 		_update_quest_badge()
+
+# ── Tutorial / Onboarding ───────────────────────────────────────────────────
+
+func _process(delta: float) -> void:
+	_tutorial_timer += delta
+	if _tutorial_timer >= 2.0:
+		_tutorial_timer = 0.0
+		_check_tutorial_step_2()
+
+func _show_tutorial_step_0() -> void:
+	# Check that player has no modules yet
+	var has_modules := false
+	for mid in GameManager.module_counts:
+		if GameManager.module_counts[mid] > 0:
+			has_modules = true
+			break
+	if has_modules:
+		GameManager.tutorial_step = 3
+		return
+	# Find first visible module row
+	for mid in _module_buttons:
+		var row: PanelContainer = _module_buttons[mid]
+		if row.visible:
+			_show_tooltip(row, "Achète un module pour produire de l'énergie ⚡")
+			return
+
+func _show_tutorial_step_1() -> void:
+	_show_tooltip(tab_research_btn, "Débloque des améliorations ✦")
+	var tw := create_tween()
+	tw.tween_interval(3.0)
+	tw.tween_callback(func():
+		_dismiss_tooltip()
+		GameManager.tutorial_step = 2
+	)
+
+func _check_tutorial_step_2() -> void:
+	if GameManager.tutorial_step != 2:
+		return
+	var threshold := GameManager.prestige.get_threshold()
+	if threshold <= 0.0:
+		return
+	var pct: float = GameManager.prestige.total_energy_produced / threshold
+	if pct >= 0.1:
+		_show_tooltip(tab_prestige_btn, "Prestige pour des bonus permanents ⭐")
+		GameManager.tutorial_step = 3
+
+func _show_tooltip(target: Control, text: String) -> void:
+	_dismiss_tooltip()
+	var panel := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.1, 0.15, 0.9)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(12)
+	panel.add_theme_stylebox_override("panel", style)
+
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 26)
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+	panel.add_child(lbl)
+
+	add_child(panel)
+	# Position below target
+	await get_tree().process_frame
+	panel.global_position = target.global_position + Vector2(0, target.size.y + 8)
+	# Clamp to screen width
+	var max_x: float = get_viewport_rect().size.x - panel.size.x - 8
+	panel.global_position.x = clampf(panel.global_position.x, 8, max_x)
+
+	_tutorial_tooltip = panel
+
+	# Pulse the target 3 times
+	var pulse_tw := create_tween()
+	for i in 3:
+		pulse_tw.tween_property(target, "modulate", Color(1.3, 1.2, 0.8), 0.3)
+		pulse_tw.tween_property(target, "modulate", Color.WHITE, 0.3)
+
+	# Auto-dismiss after 4s
+	var fade_tw := create_tween()
+	fade_tw.tween_interval(3.5)
+	fade_tw.tween_property(panel, "modulate:a", 0.0, 0.5)
+	fade_tw.tween_callback(func():
+		if is_instance_valid(panel):
+			panel.queue_free()
+		if _tutorial_tooltip == panel:
+			_tutorial_tooltip = null
+	)
+
+func _dismiss_tooltip() -> void:
+	if _tutorial_tooltip and is_instance_valid(_tutorial_tooltip):
+		_tutorial_tooltip.queue_free()
+		_tutorial_tooltip = null

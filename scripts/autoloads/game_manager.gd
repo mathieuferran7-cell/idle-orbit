@@ -16,9 +16,11 @@ var _tick_accumulator: float = 0.0
 var _pending_offline_gains: Dictionary = {}
 var _minigame_data: Dictionary = {}
 var _pre_prestige_orbits: int = 0
+var no_ads: bool = false
 var _in_minigame: bool = false
 var _post_prestige_pending: int = -1
 var _return_to_prestige_tab: bool = false
+var tutorial_step: int = 0
 
 func _ready() -> void:
 	_load_data_files()
@@ -306,6 +308,8 @@ func _apply_save(data: Dictionary) -> void:
 	for module_id in saved_modules:
 		if module_id in module_counts:
 			module_counts[module_id] = int(saved_modules[module_id])
+	no_ads = bool(data.get("no_ads", false))
+	tutorial_step = int(data.get("tutorial_step", 0))
 	research.load_state(data.get("research_levels", {}))
 	prestige.load_state(data.get("prestige", {}))
 	events.load_state(data.get("events", {}))
@@ -316,6 +320,8 @@ func get_save_data() -> Dictionary:
 	return {
 		"energy": energy,
 		"tech": tech,
+		"no_ads": no_ads,
+		"tutorial_step": tutorial_step,
 		"module_counts": module_counts.duplicate(),
 		"research_levels": research.get_state(),
 		"prestige": prestige.get_state(),
@@ -344,6 +350,8 @@ func full_reset() -> void:
 	SaveManager.delete_save()
 	energy = float(balance.get("starting_energy", 10.0))
 	tech = 0.0
+	no_ads = false
+	tutorial_step = 0
 	for module_id in module_counts:
 		module_counts[module_id] = 0
 	research.setup(research.data)

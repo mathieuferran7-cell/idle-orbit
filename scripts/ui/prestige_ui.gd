@@ -83,7 +83,7 @@ func _build_ui() -> void:
 		var tier_label := Label.new()
 		tier_label.text = TIER_NAMES[tier_num]
 		tier_label.add_theme_font_size_override("font_size", 28)
-		tier_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		tier_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75))
 		inner.add_child(tier_label)
 
 		for tid in tiers[tier_num]:
@@ -137,6 +137,19 @@ func _build_ui() -> void:
 		dev_minigame.pressed.connect(_on_dev_minigame)
 		inner.add_child(dev_minigame)
 
+		var no_ads_btn := Button.new()
+		no_ads_btn.text = "Toggle No Ads"
+		no_ads_btn.custom_minimum_size = Vector2(0, 80)
+		no_ads_btn.add_theme_font_size_override("font_size", 24)
+		no_ads_btn.pressed.connect(func():
+			GameManager.no_ads = not GameManager.no_ads
+			if GameManager.no_ads:
+				AdManager.hide_banner()
+			else:
+				AdManager.show_banner()
+		)
+		inner.add_child(no_ads_btn)
+
 		for eid in GameManager.events.data:
 			var evt: Dictionary = GameManager.events.data[eid]
 			var btn := Button.new()
@@ -183,7 +196,7 @@ func _create_talent_row(tid: String) -> PanelContainer:
 	desc_lbl.name = "DescLbl"
 	desc_lbl.text = talent.get("desc", "")
 	desc_lbl.add_theme_font_size_override("font_size", 22)
-	desc_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	desc_lbl.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75))
 	info.add_child(desc_lbl)
 
 	var level_lbl := Label.new()

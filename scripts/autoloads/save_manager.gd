@@ -1,7 +1,7 @@
 extends Node
 
 const SAVE_PATH := "user://idle_orbit_save.json"
-const CURRENT_SAVE_VERSION := 1
+const CURRENT_SAVE_VERSION := 2
 
 func save_game(data: Dictionary) -> void:
 	data["save_version"] = CURRENT_SAVE_VERSION
@@ -34,6 +34,9 @@ func load_game() -> Dictionary:
 func _migrate(data: Dictionary, from_version: int) -> Dictionary:
 	if from_version < 1:
 		data["save_version"] = 1
+	if from_version < 2:
+		data["no_ads"] = false
+		data["save_version"] = 2
 	return data
 
 func delete_save() -> void:
