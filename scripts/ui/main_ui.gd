@@ -318,7 +318,7 @@ func _create_module_row(module_id: String) -> PanelContainer:
 	desc_label.name = "DescLabel"
 	desc_label.text = mod.get("description", "")
 	desc_label.add_theme_font_size_override("font_size", 24)
-	desc_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	desc_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75))
 	info_vbox.add_child(desc_label)
 
 	var stats_label := Label.new()
